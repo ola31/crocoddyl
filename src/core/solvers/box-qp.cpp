@@ -1,19 +1,21 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2020, University of Edinburgh
+// Copyright (C) 2019-2022, University of Edinburgh, Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
 #include "crocoddyl/core/solvers/box-qp.hpp"
+
+#include <iostream>
+
 #include "crocoddyl/core/utils/exception.hpp"
 
 namespace crocoddyl {
 
-BoxQP::BoxQP(const std::size_t nx, const std::size_t maxiter, const double th_acceptstep, const double th_grad,
-             const double reg)
+BoxQP::BoxQP(const std::size_t nx, const std::size_t maxiter,
+             const double th_acceptstep, const double th_grad, const double reg)
     : nx_(nx),
       maxiter_(maxiter),
       th_acceptstep_(th_acceptstep),
@@ -24,10 +26,15 @@ BoxQP::BoxQP(const std::size_t nx, const std::size_t maxiter, const double th_ac
       x_(nx),
       xnew_(nx),
       g_(nx),
-      dx_(nx) {
+      dx_(nx),
+      xo_(nx),
+      dxo_(nx),
+      qo_(nx),
+      Ho_(nx, nx) {
   // Check if values have a proper range
   if (0. >= th_acceptstep && th_acceptstep >= 0.5) {
-    std::cerr << "Warning: th_acceptstep value should between 0 and 0.5" << std::endl;
+    std::cerr << "Warning: th_acceptstep value should between 0 and 0.5"
+              << std::endl;
   }
   if (0. > th_grad) {
     std::cerr << "Warning: th_grad value has to be positive." << std::endl;
@@ -41,6 +48,10 @@ BoxQP::BoxQP(const std::size_t nx, const std::size_t maxiter, const double th_ac
   xnew_.setZero();
   g_.setZero();
   dx_.setZero();
+  xo_.setZero();
+  dxo_.setZero();
+  qo_.setZero();
+  Ho_.setZero();
 
   // Reserve the space and compute alphas
   solution_.x = Eigen::VectorXd::Zero(nx);
@@ -55,27 +66,36 @@ BoxQP::BoxQP(const std::size_t nx, const std::size_t maxiter, const double th_ac
 
 BoxQP::~BoxQP() {}
 
-const BoxQPSolution& BoxQP::solve(const Eigen::MatrixXd& H, const Eigen::VectorXd& q, const Eigen::VectorXd& lb,
-                                  const Eigen::VectorXd& ub, const Eigen::VectorXd& xinit) {
-  if (static_cast<std::size_t>(H.rows()) != nx_ || static_cast<std::size_t>(H.cols()) != nx_) {
+const BoxQPSolution& BoxQP::solve(const Eigen::MatrixXd& H,
+                                  const Eigen::VectorXd& q,
+                                  const Eigen::VectorXd& lb,
+                                  const Eigen::VectorXd& ub,
+                                  const Eigen::VectorXd& xinit) {
+  if (static_cast<std::size_t>(H.rows()) != nx_ ||
+      static_cast<std::size_t>(H.cols()) != nx_) {
     throw_pretty("Invalid argument: "
-                 << "H has wrong dimension (it should be " + std::to_string(nx_) + "," + std::to_string(nx_) + ")");
+                 << "H has wrong dimension (it should be " +
+                        std::to_string(nx_) + "," + std::to_string(nx_) + ")");
   }
   if (static_cast<std::size_t>(q.size()) != nx_) {
     throw_pretty("Invalid argument: "
-                 << "q has wrong dimension (it should be " + std::to_string(nx_) + ")");
+                 << "q has wrong dimension (it should be " +
+                        std::to_string(nx_) + ")");
   }
   if (static_cast<std::size_t>(lb.size()) != nx_) {
     throw_pretty("Invalid argument: "
-                 << "lb has wrong dimension (it should be " + std::to_string(nx_) + ")");
+                 << "lb has wrong dimension (it should be " +
+                        std::to_string(nx_) + ")");
   }
   if (static_cast<std::size_t>(ub.size()) != nx_) {
     throw_pretty("Invalid argument: "
-                 << "ub has wrong dimension (it should be " + std::to_string(nx_) + ")");
+                 << "ub has wrong dimension (it should be " +
+                        std::to_string(nx_) + ")");
   }
   if (static_cast<std::size_t>(xinit.size()) != nx_) {
     throw_pretty("Invalid argument: "
-                 << "xinit has wrong dimension (it should be " + std::to_string(nx_) + ")");
+                 << "xinit has wrong dimension (it should be " +
+                        std::to_string(nx_) + ")");
   }
 
   // We need to enforce feasible warm-starting of the algorithm
@@ -87,7 +107,7 @@ const BoxQPSolution& BoxQP::solve(const Eigen::MatrixXd& H, const Eigen::VectorX
   for (std::size_t k = 0; k < maxiter_; ++k) {
     solution_.clamped_idx.clear();
     solution_.free_idx.clear();
-    // Compute the gradient
+    // Compute the Cauchy point and active set
     g_ = q;
     g_.noalias() += H * x_;
     for (std::size_t j = 0; j < nx_; ++j) {
@@ -102,86 +122,70 @@ const BoxQPSolution& BoxQP::solve(const Eigen::MatrixXd& H, const Eigen::VectorX
       }
     }
 
-    // Check convergence
+    // Compute the search direction as Newton step along the free space
     nf_ = solution_.free_idx.size();
     nc_ = solution_.clamped_idx.size();
-    if (g_.lpNorm<Eigen::Infinity>() <= th_grad_ || nf_ == 0) {
-      if (k == 0) {  // compute the inverse of the free Hessian
-        Hff_.resize(nf_, nf_);
-        for (std::size_t i = 0; i < nf_; ++i) {
-          const std::size_t fi = solution_.free_idx[i];
-          for (std::size_t j = 0; j < nf_; ++j) {
-            Hff_(i, j) = H(fi, solution_.free_idx[j]);
-          }
-        }
-        if (reg_ != 0.) {
-          Hff_.diagonal().array() += reg_;
-        }
-        Hff_inv_llt_.compute(Hff_);
-        const Eigen::ComputationInfo& info = Hff_inv_llt_.info();
-        if (info != Eigen::Success) {
-          throw_pretty("backward_error");
-        }
-        solution_.Hff_inv.setIdentity(nf_, nf_);
-        Hff_inv_llt_.solveInPlace(solution_.Hff_inv);
-      }
-      solution_.x = x_;
-      return solution_;
-    }
-
-    // Compute the search direction as Newton step along the free space
-    qf_.resize(nf_);
-    xf_.resize(nf_);
-    xc_.resize(nc_);
-    dxf_.resize(nf_);
-    Hff_.resize(nf_, nf_);
-    Hfc_.resize(nf_, nc_);
+    Eigen::VectorBlock<Eigen::VectorXd> xf = xo_.head(nf_);
+    Eigen::VectorBlock<Eigen::VectorXd> xc = xo_.tail(nc_);
+    Eigen::VectorBlock<Eigen::VectorXd> dxf = dxo_.head(nf_);
+    Eigen::VectorBlock<Eigen::VectorXd> qf = qo_.head(nf_);
+    Eigen::Block<Eigen::MatrixXd> Hff = Ho_.topLeftCorner(nf_, nf_);
+    Eigen::Block<Eigen::MatrixXd> Hfc = Ho_.topRightCorner(nf_, nc_);
     for (std::size_t i = 0; i < nf_; ++i) {
       const std::size_t fi = solution_.free_idx[i];
-      qf_(i) = q(fi);
-      xf_(i) = x_(fi);
+      qf(i) = q(fi);
+      xf(i) = x_(fi);
       for (std::size_t j = 0; j < nf_; ++j) {
-        Hff_(i, j) = H(fi, solution_.free_idx[j]);
+        Hff(i, j) = H(fi, solution_.free_idx[j]);
       }
       for (std::size_t j = 0; j < nc_; ++j) {
         const std::size_t cj = solution_.clamped_idx[j];
-        xc_(j) = x_(cj);
-        Hfc_(i, j) = H(fi, cj);
+        xc(j) = x_(cj);
+        Hfc(i, j) = H(fi, cj);
       }
     }
     if (reg_ != 0.) {
-      Hff_.diagonal().array() += reg_;
+      Hff.diagonal().array() += reg_;
     }
-    Hff_inv_llt_.compute(Hff_);
+    Hff_inv_llt_.compute(Hff);
     const Eigen::ComputationInfo& info = Hff_inv_llt_.info();
     if (info != Eigen::Success) {
       throw_pretty("backward_error");
     }
     solution_.Hff_inv.setIdentity(nf_, nf_);
     Hff_inv_llt_.solveInPlace(solution_.Hff_inv);
-    dxf_ = -qf_;
+    qf.noalias() += Hff * xf;
     if (nc_ != 0) {
-      dxf_.noalias() -= Hfc_ * xc_;
+      qf.noalias() += Hfc * xc;
     }
-    Hff_inv_llt_.solveInPlace(dxf_);
-    dxf_ -= xf_;
+    dxf = -qf;
+    Hff_inv_llt_.solveInPlace(dxf);
     dx_.setZero();
     for (std::size_t i = 0; i < nf_; ++i) {
-      dx_(solution_.free_idx[i]) = dxf_(i);
+      dx_(solution_.free_idx[i]) = dxf(i);
+      g_(solution_.free_idx[i]) = -qf(i);
     }
 
     // Try different step lengths
     fold_ = 0.5 * x_.dot(H * x_) + q.dot(x_);
-    for (std::vector<double>::const_iterator it = alphas_.begin(); it != alphas_.end(); ++it) {
+    for (std::vector<double>::const_iterator it = alphas_.begin();
+         it != alphas_.end(); ++it) {
       double steplength = *it;
       for (std::size_t i = 0; i < nx_; ++i) {
-        xnew_(i) = std::max(std::min(x_(i) + steplength * dx_(i), ub(i)), lb(i));
+        xnew_(i) =
+            std::max(std::min(x_(i) + steplength * dx_(i), ub(i)), lb(i));
       }
       fnew_ = 0.5 * xnew_.dot(H * xnew_) + q.dot(xnew_);
       if (fold_ - fnew_ > th_acceptstep_ * g_.dot(x_ - xnew_)) {
         x_ = xnew_;
         break;
       }
+    }
+
+    // Check convergence
+    if (qf.lpNorm<Eigen::Infinity>() <= th_grad_) {
+      solution_.x = x_;
+      return solution_;
     }
   }
   solution_.x = x_;
@@ -204,10 +208,14 @@ const std::vector<double>& BoxQP::get_alphas() const { return alphas_; }
 
 void BoxQP::set_nx(const std::size_t nx) {
   nx_ = nx;
-  x_ = Eigen::VectorXd::Zero(nx);
-  xnew_ = Eigen::VectorXd::Zero(nx);
-  g_ = Eigen::VectorXd::Zero(nx);
-  dx_ = Eigen::VectorXd::Zero(nx);
+  x_.conservativeResize(nx);
+  xnew_.conservativeResize(nx);
+  g_.conservativeResize(nx);
+  dx_.conservativeResize(nx);
+  xo_.conservativeResize(nx);
+  dxo_.conservativeResize(nx);
+  qo_.conservativeResize(nx);
+  Ho_.conservativeResize(nx, nx);
 }
 
 void BoxQP::set_maxiter(const std::size_t maxiter) { maxiter_ = maxiter; }

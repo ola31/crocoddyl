@@ -12,25 +12,27 @@
 #include <pinocchio/multibody/fwd.hpp>
 #include <pinocchio/spatial/motion.hpp>
 
-#include "crocoddyl/multibody/fwd.hpp"
 #include "crocoddyl/core/residual-base.hpp"
-#include "crocoddyl/multibody/states/multibody.hpp"
-#include "crocoddyl/multibody/data/multibody.hpp"
 #include "crocoddyl/core/utils/exception.hpp"
+#include "crocoddyl/multibody/data/multibody.hpp"
+#include "crocoddyl/multibody/fwd.hpp"
+#include "crocoddyl/multibody/states/multibody.hpp"
 
 namespace crocoddyl {
 
 /**
  * @brief Frame velocity residual
  *
- * This residual function defines a tracking of frame velocity as \f$\mathbf{r}=\mathbf{v}-\mathbf{v}^*\f$, where
- * \f$\mathbf{v},\mathbf{v}^*\in~T_{\mathbf{p}}~\mathbb{SE(3)}\f$ are the current and reference frame velocities,
- * respectively. Note that the tangent vector is described by the frame placement \f$\mathbf{p}\f$, and the dimension
- * of the residual vector is 6.
- * Furthermore, the Jacobians of the residual function are computed analytically.
+ * This residual function defines a tracking of frame velocity as
+ * \f$\mathbf{r}=\mathbf{v}-\mathbf{v}^*\f$, where
+ * \f$\mathbf{v},\mathbf{v}^*\in~T_{\mathbf{p}}~\mathbb{SE(3)}\f$ are the
+ * current and reference frame velocities, respectively. Note that the tangent
+ * vector is described by the frame placement \f$\mathbf{p}\f$, and the
+ * dimension of the residual vector is 6. Furthermore, the Jacobians of the
+ * residual function are computed analytically.
  *
- * As described in `ResidualModelAbstractTpl`, the residual vector and its Jacobians are calculated by `calc` and
- * `calcDiff`, respectively.
+ * As described in `ResidualModelAbstractTpl`, the residual vector and its
+ * Jacobians are calculated by `calc` and `calcDiff`, respectively.
  *
  * \sa `ResidualModelAbstractTpl`, `calc()`, `calcDiff()`, `createData()`
  */
@@ -55,11 +57,15 @@ class ResidualModelFrameVelocityTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] state       State of the multibody system
    * @param[in] id          Reference frame id
    * @param[in] velocity    Reference velocity
-   * @param[in] type        Reference type of velocity (WORLD, LOCAL, LOCAL_WORLD_ALIGNED)
+   * @param[in] type        Reference type of velocity (WORLD, LOCAL,
+   * LOCAL_WORLD_ALIGNED)
    * @param[in] nu          Dimension of the control vector
    */
-  ResidualModelFrameVelocityTpl(boost::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id,
-                                const Motion& velocity, const pinocchio::ReferenceFrame type, const std::size_t nu);
+  ResidualModelFrameVelocityTpl(boost::shared_ptr<StateMultibody> state,
+                                const pinocchio::FrameIndex id,
+                                const Motion& velocity,
+                                const pinocchio::ReferenceFrame type,
+                                const std::size_t nu);
 
   /**
    * @brief Initialize the frame velocity residual model
@@ -69,10 +75,13 @@ class ResidualModelFrameVelocityTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] state       State of the multibody system
    * @param[in] id          Reference frame id
    * @param[in] velocity    Reference velocity
-   * @param[in] type        Reference type of velocity (WORLD, LOCAL, LOCAL_WORLD_ALIGNED)
+   * @param[in] type        Reference type of velocity (WORLD, LOCAL,
+   * LOCAL_WORLD_ALIGNED)
    */
-  ResidualModelFrameVelocityTpl(boost::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id,
-                                const Motion& velocity, const pinocchio::ReferenceFrame type);
+  ResidualModelFrameVelocityTpl(boost::shared_ptr<StateMultibody> state,
+                                const pinocchio::FrameIndex id,
+                                const Motion& velocity,
+                                const pinocchio::ReferenceFrame type);
   virtual ~ResidualModelFrameVelocityTpl();
 
   /**
@@ -82,7 +91,8 @@ class ResidualModelFrameVelocityTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
+  virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data,
+                    const Eigen::Ref<const VectorXs>& x,
                     const Eigen::Ref<const VectorXs>& u);
 
   /**
@@ -92,41 +102,43 @@ class ResidualModelFrameVelocityTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
+  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
+                        const Eigen::Ref<const VectorXs>& x,
                         const Eigen::Ref<const VectorXs>& u);
 
   /**
    * @brief Create the frame velocity residual data
    */
-  virtual boost::shared_ptr<ResidualDataAbstract> createData(DataCollectorAbstract* const data);
+  virtual boost::shared_ptr<ResidualDataAbstract> createData(
+      DataCollectorAbstract* const data);
 
   /**
-   * @brief Modify the reference frame id
+   * @brief Return the reference frame id
    */
   pinocchio::FrameIndex get_id() const;
 
   /**
-   * @brief Modify the reference velocity
+   * @brief Return the reference velocity
    */
   const Motion& get_reference() const;
 
   /**
-   * @brief Modify the reference type of velocity
+   * @brief Return the reference type of velocity
    */
   pinocchio::ReferenceFrame get_type() const;
 
   /**
-   * @brief Return reference frame id
+   * @brief Modify reference frame id
    */
   void set_id(const pinocchio::FrameIndex id);
 
   /**
-   * @brief Return reference velocity
+   * @brief Modify reference velocity
    */
   void set_reference(const Motion& velocity);
 
   /**
-   * @brief Return reference type of velocity
+   * @brief Modify reference type of velocity
    */
   void set_type(const pinocchio::ReferenceFrame type);
 
@@ -145,10 +157,11 @@ class ResidualModelFrameVelocityTpl : public ResidualModelAbstractTpl<_Scalar> {
   using Base::unone_;
 
  private:
-  pinocchio::FrameIndex id_;                                              //!< Reference frame id
-  Motion vref_;                                                           //!< Reference velocity
-  pinocchio::ReferenceFrame type_;                                        //!< Reference type of velocity
-  boost::shared_ptr<typename StateMultibody::PinocchioModel> pin_model_;  //!< Pinocchio model
+  pinocchio::FrameIndex id_;        //!< Reference frame id
+  Motion vref_;                     //!< Reference velocity
+  pinocchio::ReferenceFrame type_;  //!< Reference type of velocity
+  boost::shared_ptr<typename StateMultibody::PinocchioModel>
+      pin_model_;  //!< Pinocchio model
 };
 
 template <typename _Scalar>
@@ -162,11 +175,16 @@ struct ResidualDataFrameVelocityTpl : public ResidualDataAbstractTpl<_Scalar> {
   typedef typename MathBase::Matrix6xs Matrix6xs;
 
   template <template <typename Scalar> class Model>
-  ResidualDataFrameVelocityTpl(Model<Scalar>* const model, DataCollectorAbstract* const data) : Base(model, data) {
+  ResidualDataFrameVelocityTpl(Model<Scalar>* const model,
+                               DataCollectorAbstract* const data)
+      : Base(model, data) {
     // Check that proper shared data has been passed
-    DataCollectorMultibodyTpl<Scalar>* d = dynamic_cast<DataCollectorMultibodyTpl<Scalar>*>(shared);
+    DataCollectorMultibodyTpl<Scalar>* d =
+        dynamic_cast<DataCollectorMultibodyTpl<Scalar>*>(shared);
     if (d == NULL) {
-      throw_pretty("Invalid argument: the shared data should be derived from DataCollectorMultibody");
+      throw_pretty(
+          "Invalid argument: the shared data should be derived from "
+          "DataCollectorMultibody");
     }
 
     // Avoids data casting at runtime

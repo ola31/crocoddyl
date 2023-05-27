@@ -11,10 +11,10 @@
 
 #include <iterator>
 
-#include "state.hpp"
 #include "crocoddyl/core/action-base.hpp"
 #include "crocoddyl/core/numdiff/action.hpp"
 #include "crocoddyl/multibody/actions/impulse-fwddyn.hpp"
+#include "state.hpp"
 
 namespace crocoddyl {
 namespace unittest {
@@ -30,7 +30,7 @@ struct ActionModelTypes {
   };
   static std::vector<Type> init_all() {
     std::vector<Type> v;
-    v.clear();
+    v.reserve(NbActionModelTypes);
     for (int i = 0; i < NbActionModelTypes; ++i) {
       v.push_back((Type)i);
     }
@@ -48,11 +48,11 @@ class ActionModelFactory {
   explicit ActionModelFactory();
   ~ActionModelFactory();
 
-  boost::shared_ptr<crocoddyl::ActionModelAbstract> create(ActionModelTypes::Type type,
-                                                           bool secondInstance = false) const;
+  boost::shared_ptr<crocoddyl::ActionModelAbstract> create(
+      ActionModelTypes::Type type, bool secondInstance = false) const;
 
-  boost::shared_ptr<crocoddyl::ActionModelImpulseFwdDynamics> create_impulseFwdDynamics(
-      StateModelTypes::Type state_type) const;
+  boost::shared_ptr<crocoddyl::ActionModelImpulseFwdDynamics>
+  create_impulseFwdDynamics(StateModelTypes::Type state_type) const;
 };
 
 }  // namespace unittest

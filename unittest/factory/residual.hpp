@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2021, University of Edinburgh
+// Copyright (C) 2021-2022, University of Edinburgh, LAAS-CNRS
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -9,11 +9,10 @@
 #ifndef CROCODDYL_RESIDUAL_FACTORY_HPP_
 #define CROCODDYL_RESIDUAL_FACTORY_HPP_
 
-#include "state.hpp"
-#include "residual.hpp"
-#include "crocoddyl/core/residual-base.hpp"
 #include "crocoddyl/core/numdiff/residual.hpp"
+#include "crocoddyl/core/residual-base.hpp"
 #include "crocoddyl/multibody/states/multibody.hpp"
+#include "state.hpp"
 
 namespace crocoddyl {
 namespace unittest {
@@ -29,6 +28,9 @@ struct ResidualModelTypes {
     ResidualModelFrameTranslation,
     ResidualModelFrameVelocity,
     ResidualModelControlGrav,
+#ifdef PINOCCHIO_WITH_HPP_FCL
+    ResidualModelPairCollision,
+#endif  // PINOCCHIO_WITH_HPP_FCL
     NbResidualModelTypes
   };
   static std::vector<Type> init_all() {
@@ -49,6 +51,7 @@ class ResidualModelFactory {
 
   typedef crocoddyl::MathBaseTpl<double> MathBase;
   typedef typename MathBase::Vector6s Vector6d;
+  typedef pinocchio::GeometryObject::CollisionGeometryPtr CollisionGeometryPtr;
 
   explicit ResidualModelFactory();
   ~ResidualModelFactory();
@@ -58,7 +61,8 @@ class ResidualModelFactory {
       std::size_t nu = std::numeric_limits<std::size_t>::max()) const;
 };
 
-boost::shared_ptr<crocoddyl::ResidualModelAbstract> create_random_residual(StateModelTypes::Type state_type);
+boost::shared_ptr<crocoddyl::ResidualModelAbstract> create_random_residual(
+    StateModelTypes::Type state_type);
 
 }  // namespace unittest
 }  // namespace crocoddyl

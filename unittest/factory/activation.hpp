@@ -30,7 +30,7 @@ struct ActivationModelTypes {
   };
   static std::vector<Type> init_all() {
     std::vector<Type> v;
-    v.clear();
+    v.reserve(NbActivationModelTypes);
     for (int i = 0; i < NbActivationModelTypes; ++i) {
       v.push_back((Type)i);
     }
@@ -48,8 +48,8 @@ class ActivationModelFactory {
   explicit ActivationModelFactory();
   ~ActivationModelFactory();
 
-  boost::shared_ptr<crocoddyl::ActivationModelAbstract> create(ActivationModelTypes::Type activation_type,
-                                                               std::size_t nr = 5) const;
+  boost::shared_ptr<crocoddyl::ActivationModelAbstract> create(
+      ActivationModelTypes::Type activation_type, std::size_t nr = 5) const;
 };
 
 }  // namespace unittest

@@ -1,7 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2022, LAAS-CNRS, University of Edinburgh,
+//                          Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -9,9 +10,9 @@
 #ifndef CROCODDYL_CORE_ACTUATION_BASE_HPP_
 #define CROCODDYL_CORE_ACTUATION_BASE_HPP_
 
-#include <stdexcept>
-#include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
+#include <stdexcept>
 
 #include "crocoddyl/core/fwd.hpp"
 #include "crocoddyl/core/mathbase.hpp"
@@ -23,15 +24,20 @@ namespace crocoddyl {
 /**
  * @brief Abstract class for the actuation-mapping model
  *
- * The generalized torques \f$\boldsymbol{\tau}\in\mathbb{R}^{nv}\f$ can by any nonlinear function of the
- * control inputs \f$\mathbf{u}\in\mathbb{R}^{nu}\f$, and state point \f$\mathbf{x}\in\mathbb{R}^{nx}\f$, where
- * `nv`, `nu`, and `ndx` are the number of joints, dimension of the control input and state manifold,
- * respectively. Additionally, the generalized torques are also named as the actuation signals of our system.
+ * The generalized torques \f$\boldsymbol{\tau}\in\mathbb{R}^{nv}\f$ can by any
+ * nonlinear function of the joint-torque inputs
+ * \f$\mathbf{u}\in\mathbb{R}^{nu}\f$, and state point
+ * \f$\mathbf{x}\in\mathbb{R}^{nx}\f$, where `nv`, `nu`, and `ndx` are the
+ * number of joints, dimension of the joint torque input and state manifold,
+ * respectively. Additionally, the generalized torques are also named as the
+ * actuation signals of our system.
  *
- * The main computations are carrying out in `calc()`, and `calcDiff()`, where the former computes actuation signal,
- * and the latter computes the Jacobians of the actuation-mapping function, i.e.,
+ * The main computations are carried out in `calc()`, and `calcDiff()`, where
+ * the former computes actuation signal, and the latter computes the Jacobians
+ * of the actuation-mapping function, i.e.,
  * \f$\frac{\partial\boldsymbol{\tau}}{\partial\mathbf{x}}\f$ and
- * \f$\frac{\partial\boldsymbol{\tau}}{\partial\mathbf{u}}\f$. Note that `calcDiff()` requires to run `calc()` first.
+ * \f$\frac{\partial\boldsymbol{\tau}}{\partial\mathbf{u}}\f$. Note that
+ * `calcDiff()` requires to run `calc()` first.
  *
  * \sa `calc()`, `calcDiff()`, `createData()`
  */
@@ -51,54 +57,86 @@ class ActuationModelAbstractTpl {
    * @brief Initialize the actuation model
    *
    * @param[in] state  State description
-   * @param[in] nu     Dimension of control vector
+   * @param[in] nu     Dimension of joint-torque input
    */
-  ActuationModelAbstractTpl(boost::shared_ptr<StateAbstract> state, const std::size_t nu);
+  ActuationModelAbstractTpl(boost::shared_ptr<StateAbstract> state,
+                            const std::size_t nu);
   virtual ~ActuationModelAbstractTpl();
 
   /**
-   * @brief Compute the actuation signal from the state point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$ and control input
+   * @brief Compute the actuation signal from the state point
+   * \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$ and joint torque inputs
    * \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    *
    * @param[in] data  Actuation data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
-   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
+   * @param[in] u     Joint-torque input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<ActuationDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
+  virtual void calc(const boost::shared_ptr<ActuationDataAbstract>& data,
+                    const Eigen::Ref<const VectorXs>& x,
                     const Eigen::Ref<const VectorXs>& u) = 0;
 
   /**
    * @brief Ignore the computation of the actuation signal
    *
-   * It does not update the actuation signal as this function is used in the terminal nodes of an optimal
-   * control problem.
+   * It does not update the actuation signal as this function is used in the
+   * terminal nodes of an optimal control problem.
    *
    * @param[in] data  Actuation data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    */
-  void calc(const boost::shared_ptr<ActuationDataAbstract>& data, const Eigen::Ref<const VectorXs>& x);
+  void calc(const boost::shared_ptr<ActuationDataAbstract>& data,
+            const Eigen::Ref<const VectorXs>& x);
 
   /**
    * @brief Compute the Jacobians of the actuation function
    *
    * @param[in] data  Actuation data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
-   * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
+   * @param[in] u     Joint-torque input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calcDiff(const boost::shared_ptr<ActuationDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
+  virtual void calcDiff(const boost::shared_ptr<ActuationDataAbstract>& data,
+                        const Eigen::Ref<const VectorXs>& x,
                         const Eigen::Ref<const VectorXs>& u) = 0;
 
   /**
    * @brief Ignore the computation of the Jacobians of the actuation function
    *
-   * It does not update the Jacobians of the actuation function as this function is used in the terminal
-   * nodes of an optimal control problem.
+   * It does not update the Jacobians of the actuation function as this function
+   * is used in the terminal nodes of an optimal control problem.
    *
    * @param[in] data  Actuation data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    */
-  void calcDiff(const boost::shared_ptr<ActuationDataAbstract>& data, const Eigen::Ref<const VectorXs>& x);
+  void calcDiff(const boost::shared_ptr<ActuationDataAbstract>& data,
+                const Eigen::Ref<const VectorXs>& x);
 
+  /**
+   * @brief Compute the joint torque input from the generalized torques
+   *
+   * It stores the results in `ActuationDataAbstractTpl::u`.
+   *
+   * @param[in] data  Actuation data
+   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
+   * @param[in] tau   Generalized torques \f$\mathbf{u}\in\mathbb{R}^{nv}\f$
+   */
+  virtual void commands(const boost::shared_ptr<ActuationDataAbstract>& data,
+                        const Eigen::Ref<const VectorXs>& x,
+                        const Eigen::Ref<const VectorXs>& tau) = 0;
+
+  /**
+   * @brief Compute the torque transform from generalized torques to joint
+   * torque inputs
+   *
+   * It stores the results in `ActuationDataAbstractTpl::Mtau`.
+   *
+   * @param[in] data  Actuation data
+   * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
+   * @param[in] tau   Joint-torque inputs \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
+   */
+  virtual void torqueTransform(
+      const boost::shared_ptr<ActuationDataAbstract>& data,
+      const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& u);
   /**
    * @brief Create the actuation data
    *
@@ -107,7 +145,7 @@ class ActuationModelAbstractTpl {
   virtual boost::shared_ptr<ActuationDataAbstract> createData();
 
   /**
-   * @brief Return the dimension of the control input
+   * @brief Return the dimension of the joint-torque input
    */
   std::size_t get_nu() const;
 
@@ -120,7 +158,8 @@ class ActuationModelAbstractTpl {
    * @brief Print information on the residual model
    */
   template <class Scalar>
-  friend std::ostream& operator<<(std::ostream& os, const ResidualModelAbstractTpl<Scalar>& model);
+  friend std::ostream& operator<<(
+      std::ostream& os, const ResidualModelAbstractTpl<Scalar>& model);
 
   /**
    * @brief Print relevant information of the residual model
@@ -130,7 +169,7 @@ class ActuationModelAbstractTpl {
   virtual void print(std::ostream& os) const;
 
  protected:
-  std::size_t nu_;                          //!< Control dimension
+  std::size_t nu_;  //!< Dimension of joint torque inputs
   boost::shared_ptr<StateAbstract> state_;  //!< Model of the state
 };
 
@@ -146,17 +185,28 @@ struct ActuationDataAbstractTpl {
   template <template <typename Scalar> class Model>
   explicit ActuationDataAbstractTpl(Model<Scalar>* const model)
       : tau(model->get_state()->get_nv()),
+        u(model->get_nu()),
         dtau_dx(model->get_state()->get_nv(), model->get_state()->get_ndx()),
-        dtau_du(model->get_state()->get_nv(), model->get_nu()) {
+        dtau_du(model->get_state()->get_nv(), model->get_nu()),
+        Mtau(model->get_nu(), model->get_state()->get_nv()),
+        tau_set(model->get_state()->get_nv(), true) {
     tau.setZero();
+    u.setZero();
     dtau_dx.setZero();
     dtau_du.setZero();
+    Mtau.setZero();
   }
   virtual ~ActuationDataAbstractTpl() {}
 
-  VectorXs tau;      //!< Actuation (generalized force) signal
-  MatrixXs dtau_dx;  //!< Partial derivatives of the actuation model w.r.t. the state point
-  MatrixXs dtau_du;  //!< Partial derivatives of the actuation model w.r.t. the control input
+  VectorXs tau;      //!< Generalized torques
+  VectorXs u;        //!< Joint torques
+  MatrixXs dtau_dx;  //!< Partial derivatives of the actuation model w.r.t. the
+                     //!< state point
+  MatrixXs dtau_du;  //!< Partial derivatives of the actuation model w.r.t. the
+                     //!< joint torque input
+  MatrixXs Mtau;  //!< Torque transform from generalized torques to joint torque
+                  //!< inputs
+  std::vector<bool> tau_set;  //!< True for joints that are actuacted
 };
 
 }  // namespace crocoddyl

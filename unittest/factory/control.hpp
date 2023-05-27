@@ -10,8 +10,9 @@
 #define CROCODDYL_CONTROL_FACTORY_HPP_
 
 #include <vector>
-#include "crocoddyl/core/fwd.hpp"
+
 #include "crocoddyl/core/control-base.hpp"
+#include "crocoddyl/core/fwd.hpp"
 #include "crocoddyl/core/utils/exception.hpp"
 
 namespace crocoddyl {
@@ -21,7 +22,7 @@ struct ControlTypes {
   enum Type { PolyZero, PolyOne, PolyTwoRK3, PolyTwoRK4, NbControlTypes };
   static std::vector<Type> init_all() {
     std::vector<Type> v;
-    v.clear();
+    v.reserve(NbControlTypes);
     for (int i = 0; i < NbControlTypes; ++i) {
       v.push_back((Type)i);
     }
@@ -39,8 +40,8 @@ class ControlFactory {
   explicit ControlFactory();
   ~ControlFactory();
 
-  boost::shared_ptr<crocoddyl::ControlParametrizationModelAbstract> create(ControlTypes::Type control_type,
-                                                                           const std::size_t nu) const;
+  boost::shared_ptr<crocoddyl::ControlParametrizationModelAbstract> create(
+      ControlTypes::Type control_type, const std::size_t nu) const;
 };
 
 }  // namespace unittest

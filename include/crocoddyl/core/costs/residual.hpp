@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2021, University of Edinburgh
+// Copyright (C) 2021-2023, University of Edinburgh, Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -9,8 +9,8 @@
 #ifndef CROCODDYL_CORE_COSTS_RESIDUAL_COST_HPP_
 #define CROCODDYL_CORE_COSTS_RESIDUAL_COST_HPP_
 
-#include "crocoddyl/core/fwd.hpp"
 #include "crocoddyl/core/cost-base.hpp"
+#include "crocoddyl/core/fwd.hpp"
 #include "crocoddyl/core/residual-base.hpp"
 
 namespace crocoddyl {
@@ -18,17 +18,20 @@ namespace crocoddyl {
 /**
  * @brief Residual-based cost
  *
- * This cost function uses a residual model to compute the cost, i.e., \f[ cost = a(\mathbf{r}(\mathbf{x},
- * \mathbf{u})), \f] where \f$\mathbf{r}(\cdot)\f$ and \f$a(\cdot)\f$ define the residual and activation functions,
+ * This cost function uses a residual model to compute the cost, i.e., \f[ cost
+ * = a(\mathbf{r}(\mathbf{x}, \mathbf{u})), \f] where \f$\mathbf{r}(\cdot)\f$
+ * and \f$a(\cdot)\f$ define the residual and activation functions,
  * respectively.
  *
- * Note that we only compute the Jacobians of the residual function. Therefore, this cost model computes its Hessians
- * through a Gauss-Newton approximation, e.g., \f$\mathbf{l_{xu}} = \mathbf{R_x}^T \mathbf{A_{rr}} \mathbf{R_u} \f$,
- * where \f$\mathbf{R_x}\f$ and \f$\mathbf{R_u}\f$ are the Jacobians of the residual function, and
- * \f$\mathbf{A_{rr}}\f$ is the Hessian of the activation model.
+ * Note that we only compute the Jacobians of the residual function. Therefore,
+ * this cost model computes its Hessians through a Gauss-Newton approximation,
+ * e.g., \f$\mathbf{l_{xu}} = \mathbf{R_x}^T \mathbf{A_{rr}} \mathbf{R_u} \f$,
+ * where \f$\mathbf{R_x}\f$ and \f$\mathbf{R_u}\f$ are the Jacobians of the
+ * residual function, and \f$\mathbf{A_{rr}}\f$ is the Hessian of the activation
+ * model.
  *
- * As described in `CostModelAbstractTpl()`, the cost value and its derivatives are calculated by `calc` and
- * `calcDiff`, respectively.
+ * As described in `CostModelAbstractTpl()`, the cost value and its derivatives
+ * are calculated by `calc` and `calcDiff`, respectively.
  *
  * \sa `CostModelAbstractTpl`, `calc()`, `calcDiff()`, `createData()`
  */
@@ -61,7 +64,8 @@ class CostModelResidualTpl : public CostModelAbstractTpl<_Scalar> {
   /**
    * @brief Initialize the residual cost model
    *
-   * We use `ActivationModelQuadTpl` as a default activation model (i.e. \f$a=\frac{1}{2}\|\mathbf{r}\|^2\f$).
+   * We use `ActivationModelQuadTpl` as a default activation model (i.e.
+   * \f$a=\frac{1}{2}\|\mathbf{r}\|^2\f$).
    *
    * @param[in] state       State of the multibody system
    * @param[in] residual    Residual model
@@ -77,7 +81,8 @@ class CostModelResidualTpl : public CostModelAbstractTpl<_Scalar> {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<CostDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
+  virtual void calc(const boost::shared_ptr<CostDataAbstract>& data,
+                    const Eigen::Ref<const VectorXs>& x,
                     const Eigen::Ref<const VectorXs>& u);
 
   /**
@@ -89,7 +94,8 @@ class CostModelResidualTpl : public CostModelAbstractTpl<_Scalar> {
    * @param[in] data  Residual cost data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    */
-  virtual void calc(const boost::shared_ptr<CostDataAbstract>& data, const Eigen::Ref<const VectorXs>& x);
+  virtual void calc(const boost::shared_ptr<CostDataAbstract>& data,
+                    const Eigen::Ref<const VectorXs>& x);
 
   /**
    * @brief Compute the derivatives of the residual cost
@@ -98,24 +104,29 @@ class CostModelResidualTpl : public CostModelAbstractTpl<_Scalar> {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calcDiff(const boost::shared_ptr<CostDataAbstract>& data, const Eigen::Ref<const VectorXs>& x,
+  virtual void calcDiff(const boost::shared_ptr<CostDataAbstract>& data,
+                        const Eigen::Ref<const VectorXs>& x,
                         const Eigen::Ref<const VectorXs>& u);
 
   /**
-   * @brief Compute the derivatives of the residual cost with respect to the state only
+   * @brief Compute the derivatives of the residual cost with respect to the
+   * state only
    *
-   * It updates the Jacobian and Hessian of the cost function based on the state only. This function is used
-   * in the terminal nodes of an optimal control problem.
+   * It updates the Jacobian and Hessian of the cost function based on the state
+   * only. This function is used in the terminal nodes of an optimal control
+   * problem.
    *
    * @param[in] data  Residual cost data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    */
-  virtual void calcDiff(const boost::shared_ptr<CostDataAbstract>& data, const Eigen::Ref<const VectorXs>& x);
+  virtual void calcDiff(const boost::shared_ptr<CostDataAbstract>& data,
+                        const Eigen::Ref<const VectorXs>& x);
 
   /**
    * @brief Create the residual cost data
    */
-  virtual boost::shared_ptr<CostDataAbstract> createData(DataCollectorAbstract* const data);
+  virtual boost::shared_ptr<CostDataAbstract> createData(
+      DataCollectorAbstract* const data);
 
   /**
    * @brief Print relevant information of the cost-residual model
@@ -140,19 +151,12 @@ struct CostDataResidualTpl : public CostDataAbstractTpl<_Scalar> {
   typedef MathBaseTpl<Scalar> MathBase;
   typedef CostDataAbstractTpl<Scalar> Base;
   typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
-  typedef typename MathBase::MatrixXs MatrixXs;
 
   template <template <typename Scalar> class Model>
-  CostDataResidualTpl(Model<Scalar>* const model, DataCollectorAbstract* const data)
-      : Base(model, data),
-        Arr_Rx(model->get_residual()->get_nr(), model->get_state()->get_ndx()),
-        Arr_Ru(model->get_residual()->get_nr(), model->get_nu()) {
-    Arr_Rx.setZero();
-    Arr_Ru.setZero();
-  }
+  CostDataResidualTpl(Model<Scalar>* const model,
+                      DataCollectorAbstract* const data)
+      : Base(model, data) {}
 
-  MatrixXs Arr_Rx;
-  MatrixXs Arr_Ru;
   using Base::activation;
   using Base::cost;
   using Base::Lu;

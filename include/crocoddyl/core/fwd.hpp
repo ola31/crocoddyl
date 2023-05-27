@@ -20,7 +20,9 @@ inline bool& enableMultithreading() {
 
 enum AssignmentOp { setto, addto, rmfrom };
 
-inline bool is_a_AssignmentOp(AssignmentOp op) { return (op == setto || op == addto || op == rmfrom); }
+inline bool is_a_AssignmentOp(AssignmentOp op) {
+  return (op == setto || op == addto || op == rmfrom);
+}
 
 // action
 template <typename Scalar>
@@ -172,6 +174,10 @@ struct SquashingDataAbstractTpl;
 template <typename Scalar>
 class SquashingModelSmoothSatTpl;
 
+// joint
+template <typename Scalar>
+struct JointDataAbstractTpl;
+
 // data collector
 template <typename Scalar>
 struct DataCollectorAbstractTpl;
@@ -179,11 +185,27 @@ struct DataCollectorAbstractTpl;
 template <typename Scalar>
 struct DataCollectorActuationTpl;
 
+template <typename Scalar>
+struct DataCollectorJointTpl;
+
+template <typename Scalar>
+struct DataCollectorJointActuationTpl;
+
 // residual
 template <typename Scalar>
 class ResidualModelControlTpl;
 template <typename Scalar>
 struct ResidualDataControlTpl;
+
+template <typename Scalar>
+class ResidualModelJointEffortTpl;
+template <typename Scalar>
+struct ResidualDataJointEffortTpl;
+
+template <typename Scalar>
+class ResidualModelJointAccelerationTpl;
+template <typename Scalar>
+struct ResidualDataJointAccelerationTpl;
 
 // cost
 template <typename Scalar>
@@ -203,8 +225,23 @@ class CostModelResidualTpl;
 template <typename Scalar>
 struct CostDataResidualTpl;
 
+// constraint
 template <typename Scalar>
-class CostModelControlTpl;
+class ConstraintModelAbstractTpl;
+template <typename Scalar>
+struct ConstraintDataAbstractTpl;
+
+template <typename Scalar>
+struct ConstraintItemTpl;
+template <typename Scalar>
+class ConstraintModelManagerTpl;
+template <typename Scalar>
+struct ConstraintDataManagerTpl;
+
+template <typename Scalar>
+class ConstraintModelResidualTpl;
+template <typename Scalar>
+struct ConstraintDataResidualTpl;
 
 // shooting
 template <typename Scalar>
@@ -230,6 +267,11 @@ template <typename Scalar>
 class ResidualModelNumDiffTpl;
 template <typename Scalar>
 struct ResidualDataNumDiffTpl;
+
+template <typename Scalar>
+class ConstraintModelNumDiffTpl;
+template <typename Scalar>
+struct ConstraintDataNumDiffTpl;
 
 template <typename Scalar>
 class StateNumDiffTpl;
@@ -258,8 +300,10 @@ typedef ActionDataUnicycleTpl<double> ActionDataUnicycle;
 typedef ActionModelLQRTpl<double> ActionModelLQR;
 typedef ActionDataLQRTpl<double> ActionDataLQR;
 
-typedef DifferentialActionModelAbstractTpl<double> DifferentialActionModelAbstract;
-typedef DifferentialActionDataAbstractTpl<double> DifferentialActionDataAbstract;
+typedef DifferentialActionModelAbstractTpl<double>
+    DifferentialActionModelAbstract;
+typedef DifferentialActionDataAbstractTpl<double>
+    DifferentialActionDataAbstract;
 typedef DifferentialActionModelLQRTpl<double> DifferentialActionModelLQR;
 typedef DifferentialActionDataLQRTpl<double> DifferentialActionDataLQR;
 
@@ -269,18 +313,29 @@ typedef IntegratedActionModelEulerTpl<double> IntegratedActionModelEuler;
 typedef IntegratedActionDataEulerTpl<double> IntegratedActionDataEuler;
 typedef IntegratedActionModelRKTpl<double> IntegratedActionModelRK;
 typedef IntegratedActionDataRKTpl<double> IntegratedActionDataRK;
-DEPRECATED("Use IntegratedActionModelRK", typedef IntegratedActionModelRK4Tpl<double> IntegratedActionModelRK4;)
-DEPRECATED("Use IntegratedActionModelRK", typedef IntegratedActionDataRK4Tpl<double> IntegratedActionDataRK4;)
+DEPRECATED(
+    "Use IntegratedActionModelRK",
+    typedef IntegratedActionModelRK4Tpl<double> IntegratedActionModelRK4;)
+DEPRECATED("Use IntegratedActionModelRK",
+           typedef IntegratedActionDataRK4Tpl<double> IntegratedActionDataRK4;)
 
 typedef ResidualModelAbstractTpl<double> ResidualModelAbstract;
 typedef ResidualDataAbstractTpl<double> ResidualDataAbstract;
 typedef ResidualModelControlTpl<double> ResidualModelControl;
 typedef ResidualDataControlTpl<double> ResidualDataControl;
+typedef ResidualModelJointEffortTpl<double> ResidualModelJointEffort;
+typedef ResidualDataJointEffortTpl<double> ResidualDataJointEffort;
+typedef ResidualModelJointAccelerationTpl<double>
+    ResidualModelJointAcceleration;
+typedef ResidualDataJointAccelerationTpl<double> ResidualDataJointAcceleration;
 
-typedef ActivationDataQuadraticBarrierTpl<double> ActivationDataQuadraticBarrier;
-typedef ActivationModelQuadraticBarrierTpl<double> ActivationModelQuadraticBarrier;
+typedef ActivationDataQuadraticBarrierTpl<double>
+    ActivationDataQuadraticBarrier;
+typedef ActivationModelQuadraticBarrierTpl<double>
+    ActivationModelQuadraticBarrier;
 typedef ActivationBoundsTpl<double> ActivationBounds;
-typedef ActivationModelWeightedQuadraticBarrierTpl<double> ActivationModelWeightedQuadraticBarrier;
+typedef ActivationModelWeightedQuadraticBarrierTpl<double>
+    ActivationModelWeightedQuadraticBarrier;
 typedef ActivationModelQuadTpl<double> ActivationModelQuad;
 typedef ActivationModelQuadFlatExpTpl<double> ActivationModelQuadFlatExp;
 typedef ActivationDataQuadFlatExpTpl<double> ActivationDataQuadFlatExp;
@@ -288,8 +343,12 @@ typedef ActivationModelQuadFlatLogTpl<double> ActivationModelQuadFlatLog;
 typedef ActivationDataQuadFlatLogTpl<double> ActivationDataQuadFlatLog;
 typedef ActivationModelWeightedQuadTpl<double> ActivationModelWeightedQuad;
 typedef ActivationDataWeightedQuadTpl<double> ActivationDataWeightedQuad;
-DEPRECATED("Use ActivationModelSmooth1Norm", typedef ActivationModelSmooth1NormTpl<double> ActivationModelSmoothAbs;)
-DEPRECATED("Use ActivationDataSmooth1Norm", typedef ActivationDataSmooth1NormTpl<double> ActivationDataSmoothAbs;)
+DEPRECATED(
+    "Use ActivationModelSmooth1Norm",
+    typedef ActivationModelSmooth1NormTpl<double> ActivationModelSmoothAbs;)
+DEPRECATED(
+    "Use ActivationDataSmooth1Norm",
+    typedef ActivationDataSmooth1NormTpl<double> ActivationDataSmoothAbs;)
 typedef ActivationModelSmooth1NormTpl<double> ActivationModelSmooth1Norm;
 typedef ActivationDataSmooth1NormTpl<double> ActivationDataSmooth1Norm;
 typedef ActivationModelSmooth2NormTpl<double> ActivationModelSmooth2Norm;
@@ -302,13 +361,20 @@ typedef ActivationDataAbstractTpl<double> ActivationDataAbstract;
 typedef StateAbstractTpl<double> StateAbstract;
 typedef StateVectorTpl<double> StateVector;
 
-typedef ControlParametrizationModelAbstractTpl<double> ControlParametrizationModelAbstract;
-typedef ControlParametrizationDataAbstractTpl<double> ControlParametrizationDataAbstract;
-typedef ControlParametrizationModelPolyZeroTpl<double> ControlParametrizationModelPolyZero;
-typedef ControlParametrizationModelPolyOneTpl<double> ControlParametrizationModelPolyOne;
-typedef ControlParametrizationDataPolyOneTpl<double> ControlParametrizationDataPolyOne;
-typedef ControlParametrizationModelPolyTwoRKTpl<double> ControlParametrizationModelPolyTwoRK;
-typedef ControlParametrizationDataPolyTwoRKTpl<double> ControlParametrizationDataPolyTwoRK;
+typedef ControlParametrizationModelAbstractTpl<double>
+    ControlParametrizationModelAbstract;
+typedef ControlParametrizationDataAbstractTpl<double>
+    ControlParametrizationDataAbstract;
+typedef ControlParametrizationModelPolyZeroTpl<double>
+    ControlParametrizationModelPolyZero;
+typedef ControlParametrizationModelPolyOneTpl<double>
+    ControlParametrizationModelPolyOne;
+typedef ControlParametrizationDataPolyOneTpl<double>
+    ControlParametrizationDataPolyOne;
+typedef ControlParametrizationModelPolyTwoRKTpl<double>
+    ControlParametrizationModelPolyTwoRK;
+typedef ControlParametrizationDataPolyTwoRKTpl<double>
+    ControlParametrizationDataPolyTwoRK;
 
 typedef ActuationDataAbstractTpl<double> ActuationDataAbstract;
 typedef ActuationModelAbstractTpl<double> ActuationModelAbstract;
@@ -319,8 +385,12 @@ typedef SquashingDataAbstractTpl<double> SquashingDataAbstract;
 typedef SquashingModelAbstractTpl<double> SquashingModelAbstract;
 typedef SquashingModelSmoothSatTpl<double> SquashingModelSmoothSat;
 
+typedef JointDataAbstractTpl<double> JointDataAbstract;
+
 typedef DataCollectorAbstractTpl<double> DataCollectorAbstract;
 typedef DataCollectorActuationTpl<double> DataCollectorActuation;
+typedef DataCollectorJointTpl<double> DataCollectorJoint;
+typedef DataCollectorJointActuationTpl<double> DataCollectorJointActuation;
 
 typedef CostModelAbstractTpl<double> CostModelAbstract;
 typedef CostDataAbstractTpl<double> CostDataAbstract;
@@ -329,20 +399,32 @@ typedef CostModelSumTpl<double> CostModelSum;
 typedef CostDataSumTpl<double> CostDataSum;
 typedef CostModelResidualTpl<double> CostModelResidual;
 typedef CostDataResidualTpl<double> CostDataResidual;
-DEPRECATED("Use ResidualModelControl with CostModelResidual", typedef CostModelControlTpl<double> CostModelControl;)
+
+typedef ConstraintModelAbstractTpl<double> ConstraintModelAbstract;
+typedef ConstraintDataAbstractTpl<double> ConstraintDataAbstract;
+typedef ConstraintItemTpl<double> ConstraintItem;
+typedef ConstraintModelManagerTpl<double> ConstraintModelManager;
+typedef ConstraintDataManagerTpl<double> ConstraintDataManager;
+typedef ConstraintModelResidualTpl<double> ConstraintModelResidual;
+typedef ConstraintDataResidualTpl<double> ConstraintDataResidual;
 
 typedef ShootingProblemTpl<double> ShootingProblem;
 
 typedef ActionModelNumDiffTpl<double> ActionModelNumDiff;
 typedef ActionDataNumDiffTpl<double> ActionDataNumDiff;
-typedef ControlParametrizationModelNumDiffTpl<double> ControlParametrizationModelNumDiff;
-typedef ControlParametrizationDataNumDiffTpl<double> ControlParametrizationDataNumDiff;
-typedef DifferentialActionModelNumDiffTpl<double> DifferentialActionModelNumDiff;
+typedef ControlParametrizationModelNumDiffTpl<double>
+    ControlParametrizationModelNumDiff;
+typedef ControlParametrizationDataNumDiffTpl<double>
+    ControlParametrizationDataNumDiff;
+typedef DifferentialActionModelNumDiffTpl<double>
+    DifferentialActionModelNumDiff;
 typedef DifferentialActionDataNumDiffTpl<double> DifferentialActionDataNumDiff;
 typedef ActivationModelNumDiffTpl<double> ActivationModelNumDiff;
 typedef ActivationDataNumDiffTpl<double> ActivationDataNumDiff;
 typedef ResidualModelNumDiffTpl<double> ResidualModelNumDiff;
 typedef ResidualDataNumDiffTpl<double> ResidualDataNumDiff;
+typedef ConstraintModelNumDiffTpl<double> ConstraintModelNumDiff;
+typedef ConstraintDataNumDiffTpl<double> ConstraintDataNumDiff;
 typedef StateNumDiffTpl<double> StateNumDiff;
 typedef ActuationModelNumDiffTpl<double> ActuationModelNumDiff;
 typedef ActuationDataNumDiffTpl<double> ActuationDataNumDiff;

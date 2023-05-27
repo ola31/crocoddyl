@@ -1,7 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2022, LAAS-CNRS, University of Edinburgh
+//                          Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -10,6 +11,7 @@
 #define BINDINGS_PYTHON_CROCODDYL_MULTIBODY_MULTIBODY_HPP_
 
 #include <pinocchio/fwd.hpp>
+
 #include "python/crocoddyl/fwd.hpp"
 
 namespace crocoddyl {
@@ -32,7 +34,9 @@ void exposeDataCollectorMultibody();
 void exposeDataCollectorContacts();
 void exposeDataCollectorImpulses();
 void exposeDifferentialActionFreeFwdDynamics();
+void exposeDifferentialActionFreeInvDynamics();
 void exposeDifferentialActionContactFwdDynamics();
+void exposeDifferentialActionContactInvDynamics();
 void exposeActionImpulseFwdDynamics();
 void exposeResidualState();
 void exposeResidualCentroidalMomentum();
@@ -53,24 +57,6 @@ void exposeResidualImpulseCoM();
 void exposeResidualPairCollision();
 #endif
 
-void exposeCostState();
-void exposeCostCoMPosition();
-void exposeCostControlGrav();
-void exposeCostControlGravContact();
-void exposeCostCentroidalMomentum();
-void exposeCostFramePlacement();
-void exposeCostFrameTranslation();
-void exposeCostFrameRotation();
-void exposeCostFrameVelocity();
-void exposeCostContactForce();
-void exposeCostContactWrenchCone();
-void exposeCostContactCoPPosition();
-void exposeCostContactFrictionCone();
-void exposeCostContactImpulse();
-void exposeCostImpulseFrictionCone();
-void exposeCostImpulseWrenchCone();
-void exposeCostImpulseCoPPosition();
-void exposeCostImpulseCoM();
 void exposeContact1D();
 void exposeContact2D();
 void exposeContact3D();

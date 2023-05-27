@@ -1,15 +1,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh, INRIA, University of Oxford
-// Copyright note valid unless otherwise stated in individual files.
-// All rights reserved.
+// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh, INRIA,
+// University of Oxford Copyright note valid unless otherwise stated in
+// individual files. All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "python/crocoddyl/fwd.hpp"
 #include "crocoddyl/core/utils/version.hpp"
-#include "python/crocoddyl/utils/vector-converter.hpp"
+#include "python/crocoddyl/fwd.hpp"
 #include "python/crocoddyl/utils/set-converter.hpp"
+#include "python/crocoddyl/utils/vector-converter.hpp"
 
 namespace crocoddyl {
 namespace python {
@@ -29,7 +29,8 @@ BOOST_PYTHON_MODULE(libcrocoddyl_pywrap) {
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 3> MatrixX3;
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorX;
   typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatrixX;
-  typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMatrixX;
+  typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
+      RowMatrixX;
 
   eigenpy::enableEigenPySpecific<Vector4>();
   eigenpy::enableEigenPySpecific<Vector6>();
@@ -38,12 +39,15 @@ BOOST_PYTHON_MODULE(libcrocoddyl_pywrap) {
   eigenpy::enableEigenPySpecific<Matrix6x>();
 
   // Register converters between std::vector and Python list
-  StdVectorPythonVisitor<VectorX, std::allocator<VectorX>, true>::expose("StdVec_VectorX");
-  StdVectorPythonVisitor<MatrixX, std::allocator<MatrixX>, true>::expose("StdVec_MatrixX");
-  StdVectorPythonVisitor<RowMatrixX, std::allocator<RowMatrixX>, true>::expose("StdVec_RowMatrixX");
+  StdVectorPythonVisitor<std::vector<VectorX>, true>::expose("StdVec_VectorX");
+  StdVectorPythonVisitor<std::vector<MatrixX>, true>::expose("StdVec_MatrixX");
+  StdVectorPythonVisitor<std::vector<RowMatrixX>, true>::expose(
+      "StdVec_RowMatrixX");
 
   // Register converters between std::set and Python set
-  StdSetPythonVisitor<std::string, std::less<std::string>, std::allocator<std::string>, true>::expose("StdSet_String");
+  StdSetPythonVisitor<std::string, std::less<std::string>,
+                      std::allocator<std::string>,
+                      true>::expose("StdSet_String");
 
   exposeCore();
   exposeMultibody();

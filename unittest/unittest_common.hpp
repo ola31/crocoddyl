@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2023, LAAS-CNRS, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -14,26 +14,26 @@
 #ifndef CROCODDYL_UNITTEST_COMMON_HPP_
 #define CROCODDYL_UNITTEST_COMMON_HPP_
 
-#define NUMDIFF_MODIFIER 20.
-
-#include <iterator>
-#include <boost/test/included/unit_test.hpp>
-#include <boost/test/execution_monitor.hpp>  // for execution_exception
-#include <boost/function.hpp>
-
-#include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <unistd.h>
+
+#include <boost/function.hpp>
+#include <boost/test/execution_monitor.hpp>  // for execution_exception
+#include <boost/test/included/unit_test.hpp>
+#include <iterator>
 #include <string>
-#include "random_generator.hpp"
+
 #include "crocoddyl/core/utils/exception.hpp"
+#include "random_generator.hpp"
 
 namespace crocoddyl {
 namespace unittest {
 
 class CaptureIOStream {
  public:
-  CaptureIOStream() : m_oldStdOut(0), m_oldStdErr(0), m_capturing(false), m_init(false) {
+  CaptureIOStream()
+      : m_oldStdOut(0), m_oldStdErr(0), m_capturing(false), m_init(false) {
     m_pipe[READ] = 0;
     m_pipe[WRITE] = 0;
     if (pipe(m_pipe) == -1) {
@@ -95,7 +95,8 @@ class CaptureIOStream {
     bool timed_out = false;
 
     while (!timed_out) {
-      if (select(m_pipe[READ] + 1, &read_fds, &write_fds, &except_fds, &timeout) == 1) {
+      if (select(m_pipe[READ] + 1, &read_fds, &write_fds, &except_fds,
+                 &timeout) == 1) {
         // do the reading
         char buff[1];
         nb_read = read(m_pipe[READ], buff, sizeof(buff));

@@ -3,9 +3,12 @@ import numpy as np
 
 
 class CostModelDoublePendulum(crocoddyl.CostModelAbstract):
-
     def __init__(self, state, activation, nu):
-        activation = activation if activation is not None else crocoddyl.ActivationModelQuad(state.ndx)
+        activation = (
+            activation
+            if activation is not None
+            else crocoddyl.ActivationModelQuad(state.ndx)
+        )
         crocoddyl.CostModelAbstract.__init__(self, state, activation, nu=nu)
 
     def calc(self, data, x, u):
@@ -37,24 +40,31 @@ class CostModelDoublePendulum(crocoddyl.CostModelAbstract):
 
 
 class CostDataDoublePendulum(crocoddyl.CostDataAbstract):
-
     def __init__(self, model, collector):
         crocoddyl.CostDataAbstract.__init__(self, model, collector)
         self.Rxx = np.zeros((6, 4))
 
 
 class ActuationModelDoublePendulum(crocoddyl.ActuationModelAbstract):
-
     def __init__(self, state, actLink):
         crocoddyl.ActuationModelAbstract.__init__(self, state, 1)
         self.nv = state.nv
         self.actLink = actLink
 
     def calc(self, data, x, u):
-        data.tau[:] = data.S * u
+        data.tau[:] = data.dtau_du * u
 
     def calcDiff(self, data, x, u):
-        data.dtau_du[:] = data.S
+        pass
+
+    def commands(self, data, x, tau):
+        if self.actLink == 1:
+            data.u[:] = tau[0]
+        else:
+            data.u[:] = tau[1]
+
+    def torqueTransform(self, data, x, tau):
+        pass
 
     def createData(self):
         data = ActuationDataDoublePendulum(self)
@@ -62,14 +72,13 @@ class ActuationModelDoublePendulum(crocoddyl.ActuationModelAbstract):
 
 
 class ActuationDataDoublePendulum(crocoddyl.ActuationDataAbstract):
-
     def __init__(self, model):
         crocoddyl.ActuationDataAbstract.__init__(self, model)
-        if model.nu == 1:
-            self.S = np.zeros(model.nv)
-        else:
-            self.S = np.zeros((model.nv, model.nu))
         if model.actLink == 1:
-            self.S[0] = 1
+            self.dtau_du[0] = 1.0
+            self.tau_set = [True, False]
+            self.Mtau[0] = 1.0
         else:
-            self.S[1] = 1
+            self.dtau_du[1] = 1.0
+            self.tau_set = [False, True]
+            self.Mtau[1] = 1.0

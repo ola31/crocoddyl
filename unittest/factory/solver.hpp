@@ -18,11 +18,24 @@ namespace crocoddyl {
 namespace unittest {
 
 struct SolverTypes {
-  enum Type { SolverKKT, SolverDDP, SolverFDDP, SolverBoxDDP, SolverBoxFDDP, NbSolverTypes };
+  enum Type {
+    SolverKKT,
+    SolverDDP,
+    SolverFDDP,
+    SolverBoxDDP,
+    SolverBoxFDDP,
+    SolverIpopt,
+    NbSolverTypes
+  };
   static std::vector<Type> init_all() {
     std::vector<Type> v;
-    v.clear();
+    v.reserve(NbSolverTypes);
     for (int i = 0; i < NbSolverTypes; ++i) {
+#ifndef CROCODDYL_WITH_IPOPT
+      if ((Type)i == SolverIpopt) {
+        continue;
+      }
+#endif
       v.push_back((Type)i);
     }
     return v;
@@ -39,8 +52,9 @@ class SolverFactory {
   explicit SolverFactory();
   ~SolverFactory();
 
-  boost::shared_ptr<crocoddyl::SolverAbstract> create(SolverTypes::Type solver_type,
-                                                      ActionModelTypes::Type action_type, size_t T) const;
+  boost::shared_ptr<crocoddyl::SolverAbstract> create(
+      SolverTypes::Type solver_type, ActionModelTypes::Type action_type,
+      size_t T) const;
 };
 
 }  // namespace unittest

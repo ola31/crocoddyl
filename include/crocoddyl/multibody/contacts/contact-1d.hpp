@@ -1,7 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2020-2021, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2020-2023, LAAS-CNRS, University of Edinburgh,
+//                          Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -9,16 +10,14 @@
 #ifndef CROCODDYL_MULTIBODY_CONTACTS_CONTACT_1D_HPP_
 #define CROCODDYL_MULTIBODY_CONTACTS_CONTACT_1D_HPP_
 
-#include <pinocchio/spatial/motion.hpp>
-#include <pinocchio/multibody/data.hpp>
 #include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/kinematics-derivatives.hpp>
+#include <pinocchio/multibody/data.hpp>
+#include <pinocchio/spatial/motion.hpp>
 
-#include "crocoddyl/multibody/fwd.hpp"
 #include "crocoddyl/core/utils/exception.hpp"
 #include "crocoddyl/multibody/contact-base.hpp"
-
-#include "crocoddyl/multibody/frames-deprecated.hpp"
+#include "crocoddyl/multibody/fwd.hpp"
 
 namespace crocoddyl {
 
@@ -47,8 +46,10 @@ class ContactModel1DTpl : public ContactModelAbstractTpl<_Scalar> {
    * @param[in] nu     Dimension of the control vector
    * @param[in] gains  Baumgarte stabilization gains
    */
-  ContactModel1DTpl(boost::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id, const Scalar xref,
-                    const std::size_t nu, const Vector2s& gains = Vector2s::Zero());
+  ContactModel1DTpl(boost::shared_ptr<StateMultibody> state,
+                    const pinocchio::FrameIndex id, const Scalar xref,
+                    const std::size_t nu,
+                    const Vector2s& gains = Vector2s::Zero());
 
   /**
    * @brief Initialize the 1d contact model
@@ -60,7 +61,8 @@ class ContactModel1DTpl : public ContactModelAbstractTpl<_Scalar> {
    * @param[in] xref   Contact position used for the Baumgarte stabilization
    * @param[in] gains  Baumgarte stabilization gains
    */
-  ContactModel1DTpl(boost::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id, const Scalar xref,
+  ContactModel1DTpl(boost::shared_ptr<StateMultibody> state,
+                    const pinocchio::FrameIndex id, const Scalar xref,
                     const Vector2s& gains = Vector2s::Zero());
 
   virtual ~ContactModel1DTpl();
@@ -72,7 +74,8 @@ class ContactModel1DTpl : public ContactModelAbstractTpl<_Scalar> {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<ContactDataAbstract>& data, const Eigen::Ref<const VectorXs>& x);
+  virtual void calc(const boost::shared_ptr<ContactDataAbstract>& data,
+                    const Eigen::Ref<const VectorXs>& x);
 
   /**
    * @brief Compute the derivatives of the 1d contact holonomic constraint
@@ -81,7 +84,8 @@ class ContactModel1DTpl : public ContactModelAbstractTpl<_Scalar> {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calcDiff(const boost::shared_ptr<ContactDataAbstract>& data, const Eigen::Ref<const VectorXs>& x);
+  virtual void calcDiff(const boost::shared_ptr<ContactDataAbstract>& data,
+                        const Eigen::Ref<const VectorXs>& x);
 
   /**
    * @brief Convert the force into a stack of spatial forces
@@ -89,12 +93,14 @@ class ContactModel1DTpl : public ContactModelAbstractTpl<_Scalar> {
    * @param[in] data   1d contact data
    * @param[in] force  1d force
    */
-  virtual void updateForce(const boost::shared_ptr<ContactDataAbstract>& data, const VectorXs& force);
+  virtual void updateForce(const boost::shared_ptr<ContactDataAbstract>& data,
+                           const VectorXs& force);
 
   /**
    * @brief Create the 1d contact data
    */
-  virtual boost::shared_ptr<ContactDataAbstract> createData(pinocchio::DataTpl<Scalar>* const data);
+  virtual boost::shared_ptr<ContactDataAbstract> createData(
+      pinocchio::DataTpl<Scalar>* const data);
 
   /**
    * @brief Return the reference frame translation
@@ -142,7 +148,8 @@ struct ContactData1DTpl : public ContactDataAbstractTpl<_Scalar> {
   typedef typename MathBase::Vector3s Vector3s;
 
   template <template <typename Scalar> class Model>
-  ContactData1DTpl(Model<Scalar>* const model, pinocchio::DataTpl<Scalar>* const data)
+  ContactData1DTpl(Model<Scalar>* const model,
+                   pinocchio::DataTpl<Scalar>* const data)
       : Base(model, data),
         fJf(6, model->get_state()->get_nv()),
         v_partial_dq(6, model->get_state()->get_nv()),

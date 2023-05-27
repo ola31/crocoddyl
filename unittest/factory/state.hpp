@@ -9,10 +9,10 @@
 #ifndef CROCODDYL_STATE_FACTORY_HPP_
 #define CROCODDYL_STATE_FACTORY_HPP_
 
-#include "pinocchio_model.hpp"
-#include "crocoddyl/core/state-base.hpp"
 #include "crocoddyl/core/numdiff/state.hpp"
+#include "crocoddyl/core/state-base.hpp"
 #include "crocoddyl/core/utils/exception.hpp"
+#include "pinocchio_model.hpp"
 
 namespace crocoddyl {
 namespace unittest {
@@ -20,6 +20,7 @@ namespace unittest {
 struct StateModelTypes {
   enum Type {
     StateVector,
+    StateMultibody_Hector,
     StateMultibody_TalosArm,
     StateMultibodyContact2D_TalosArm,
     StateMultibody_HyQ,
@@ -29,7 +30,7 @@ struct StateModelTypes {
   };
   static std::vector<Type> init_all() {
     std::vector<Type> v;
-    v.clear();
+    v.reserve(NbStateModelTypes);
     for (int i = 0; i < NbStateModelTypes; ++i) {
       v.push_back((Type)i);
     }
@@ -47,7 +48,8 @@ class StateModelFactory {
   explicit StateModelFactory();
   ~StateModelFactory();
 
-  boost::shared_ptr<crocoddyl::StateAbstract> create(StateModelTypes::Type state_type) const;
+  boost::shared_ptr<crocoddyl::StateAbstract> create(
+      StateModelTypes::Type state_type) const;
 };
 
 }  // namespace unittest

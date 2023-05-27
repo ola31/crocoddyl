@@ -1,0 +1,10 @@
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+extend-exclude = ["cmake", "examples/notebooks"]
+extend-select = ["RUF", "UP"]
+target-version = "py38"
+
+[tool.tomlsort]
+all = true
