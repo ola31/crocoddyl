@@ -11,14 +11,12 @@ jobs:
     strategy:
       matrix:
         env:
-          # Ubuntu 18.04, g++, Release
-          - {name: "Bionic / g++ / Release", ROS_DISTRO: melodic}
           # Ubuntu 20.04, g++, Release
           - {name: "Focal / g++ / Release", ROS_DISTRO: noetic}
           # Ubuntu 20.04, clang, Release
           - {name: "Focal / clang / Release", ROS_DISTRO: noetic, ADDITIONAL_DEBS: clang, CC: clang, CXX: clang++}
           # Ubuntu 20.04, clang, Release, multi-threading
-          - {name: "Focal / clang / Release / Multi-threading", ROS_DISTRO: noetic, ADDITIONAL_DEBS: clang, CC: clang, CXX: clang++, CMAKE_ARGS: "-DBUILD_WITH_MULTITHREADS=ON -DBUILD_WITH_NTHREADS=2"}
+          - {name: "Focal / clang / Release / Multi-threading", ROS_DISTRO: noetic, ADDITIONAL_DEBS: "clang libomp-dev", CC: clang, CXX: clang++, CMAKE_ARGS: "-DBUILD_WITH_MULTITHREADS=ON -DBUILD_WITH_NTHREADS=2"}
           # Format check
           #- {name: "Format check", ROS_DISTRO: noetic, CLANG_FORMAT_CHECK: file, CLANG_FORMAT_VERSION: "6.0", BEFORE_RUN_CLANG_FORMAT_CHECK: "wget https://raw.githubusercontent.com/Gepetto/linters/master/.clang-format-6.0 -O /tmp/clang_format_check/crocoddyl/.clang-format", ADDITIONAL_DEBS: wget}
           ## Working configs for Debug mode. However, tests take too long in Debug mode (~1h on a laptop).
@@ -41,7 +39,7 @@ jobs:
       # target after completion of the regular test target. The output of this step does affect the output of the CI process.
       # Note, this does not affect projects that do not have pure CMake projects in their upstream_ws.
       BUILDER: catkin_tools
-      AFTER_RUN_TARGET_TEST: 'source /root/target_ws/install/setup.bash && cd /root/target_ws/build/crocoddyl && make test'
+      AFTER_RUN_TARGET_TEST: 'source /root/target_ws/install/setup.bash && cd /root/target_ws/build/crocoddyl && env && make test'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

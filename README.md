@@ -10,8 +10,10 @@
 <a href="https://anaconda.org/conda-forge/crocoddyl"><img src="https://img.shields.io/conda/vn/conda-forge/crocoddyl.svg">
 <a href="https://pypi.org/project/crocoddyl/"><img src="https://badge.fury.io/py/crocoddyl.svg">
 <a href="https://anaconda.org/conda-forge/crocoddyl"><img src="https://anaconda.org/conda-forge/crocoddyl/badges/downloads.svg">
-<a href="https://tldrlegal.com/license/bsd-3-clause-license-%28revised%29#fulltext"><img src="https://img.shields.io/badge/license-BSD--3--Clause-blue.svg?style=flat"> 
+<a href="https://tldrlegal.com/license/bsd-3-clause-license-%28revised%29#fulltext"><img src="https://img.shields.io/badge/license-BSD--3--Clause-blue.svg?style=flat">
 <!-- <a href="https://github.com/loco-3d/crocoddyl/graphs/contributors"><img src="https://img.shields.io/github/contributors/loco-3d/crocoddyl"> -->
+<a href="https://github.com/psf/black"><img src="https://img.shields.io/badge/code%20style-black-000000.svg" alt="Code style: black" /></a>
+<a href="https://github.com/charliermarsh/ruff"><img="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v1.json" alt="Ruff" /></a>
 </p>
 
 ## <img align="center" height="20" src="https://i.imgur.com/vAYeCzC.png"/> Introduction
@@ -34,7 +36,7 @@ If you want to learn more about **Crocoddyl** and its solvers, we suggest readin
 **Crocoddyl** is versatile:
  * Various optimal control solvers (DDP, FDDP, BoxFDDP, Ipopt, etc)
  * Analytical and sparse derivatives via **[Pinocchio](https://github.com/stack-of-tasks/pinocchio)**
- * Differential geometry support
+ * Differential geometry support leveraging **[Pinocchio](https://github.com/stack-of-tasks/pinocchio)**
  * Various integrators, dynamics, costs and constraints
  * Numerical differentiation support
  * Automatic differentiation support via **[CppAD](https://github.com/coin-or/CppAD)**
@@ -104,7 +106,7 @@ Just clone it (with `--recursive`) into a catkin workspace and compile it.
    * [OpenMP](https://www.openmp.org/) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for multi-threading support)
    * [CppADCogen](https://github.com/joaoleal/CppADCodeGen) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for code-generation support)
    * [Ipopt](https://github.com/coin-or/Ipopt) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for Ipopt support)
-   * [example-robot-data](https://github.com/gepetto/example-robot-data) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for robotic examples, install Python loaders)   
+   * [example-robot-data](https://github.com/gepetto/example-robot-data) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for robotic examples, install Python loaders)
    * [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba) &nbsp;&nbsp;(for display)
    * [meshcat-python](https://github.com/rdeits/meshcat-python) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for display)
    * [jupyter](https://jupyter.org/) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for notebooks)

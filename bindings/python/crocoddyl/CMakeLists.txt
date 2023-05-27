@@ -1,55 +1,52 @@
-FILE(GLOB_RECURSE ${PROJECT_NAME}_PYTHON_BINDINGS_HEADERS
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp
-  )
-FILE(GLOB_RECURSE ${PROJECT_NAME}_PYTHON_BINDINGS_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
-  )
+file(GLOB_RECURSE ${PROJECT_NAME}_PYTHON_BINDINGS_HEADERS
+     ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp)
+file(GLOB_RECURSE ${PROJECT_NAME}_PYTHON_BINDINGS_SOURCES
+     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
-SET(${PROJECT_NAME}_PYTHON_BINDINGS_FILES
-  __init__.py
-  deprecated.py
-  deprecation.py
-  )
+set(${PROJECT_NAME}_PYTHON_BINDINGS_FILES __init__.py deprecated.py)
 
-ADD_LIBRARY(${PROJECT_NAME}_pywrap SHARED ${${PROJECT_NAME}_PYTHON_BINDINGS_SOURCES} ${${PROJECT_NAME}_PYTHON_BINDINGS_HEADERS})
-SET_TARGET_PROPERTIES(${PROJECT_NAME}_pywrap PROPERTIES SUFFIX ${PYTHON_EXT_SUFFIX})
+set(PYWRAP "${PROJECT_NAME}_pywrap")
+set(${PYWRAP}_INSTALL_DIR ${PYTHON_SITELIB}/${PROJECT_NAME})
+add_library(${PYWRAP} SHARED ${${PROJECT_NAME}_PYTHON_BINDINGS_SOURCES}
+                             ${${PROJECT_NAME}_PYTHON_BINDINGS_HEADERS})
+set_target_properties(${PYWRAP} PROPERTIES SUFFIX ${PYTHON_EXT_SUFFIX})
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME}_pywrap ${PROJECT_NAME} eigenpy::eigenpy)
-# BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS spews conversion warnings from int to long unsigned int.
-# Unfortunately, using literals does not work in a macro. As such, this turns them off for the entire wrapper:
-TARGET_COMPILE_OPTIONS(${PROJECT_NAME}_pywrap PRIVATE "-Wno-conversion")
-# We are also exposing deprecated declarations until they are removed. Ignore the errors for the wrapper:
-TARGET_COMPILE_OPTIONS(${PROJECT_NAME}_pywrap PRIVATE "-Wno-deprecated-declarations")
+target_link_libraries(${PYWRAP} ${PROJECT_NAME} eigenpy::eigenpy)
+# BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS spews conversion warnings from int to
+# long unsigned int. Unfortunately, using literals does not work in a macro. As
+# such, this turns them off for the entire wrapper:
+target_compile_options(${PYWRAP} PRIVATE "-Wno-conversion")
+# We are also exposing deprecated declarations until they are removed. Ignore
+# the errors for the wrapper:
+target_compile_options(${PYWRAP} PRIVATE "-Wno-deprecated-declarations")
 
-IF(UNIX AND NOT APPLE)
-  SET_TARGET_PROPERTIES(${PROJECT_NAME}_pywrap PROPERTIES INSTALL_RPATH "\$ORIGIN/../../..")
-ENDIF()
+if(UNIX)
+  get_relative_rpath(${${PYWRAP}_INSTALL_DIR} ${PYWRAP}_INSTALL_RPATH)
+  set_target_properties(${PYWRAP} PROPERTIES INSTALL_RPATH
+                                             "${${PYWRAP}_INSTALL_RPATH}")
+endif()
 
-IF(GENERATE_PYTHON_STUBS)
-  LOAD_STUBGEN()
-  GENERATE_STUBS(${CMAKE_CURRENT_BINARY_DIR} ${PROJECT_NAME} ${PYTHON_SITELIB})
-ENDIF(GENERATE_PYTHON_STUBS)
+if(GENERATE_PYTHON_STUBS)
+  load_stubgen()
+  generate_stubs(${CMAKE_CURRENT_BINARY_DIR} ${PROJECT_NAME} ${PYTHON_SITELIB})
+endif(GENERATE_PYTHON_STUBS)
 
-INSTALL(TARGETS ${PROJECT_NAME}_pywrap DESTINATION ${PYTHON_SITELIB}/${PROJECT_NAME})
+install(TARGETS ${PYWRAP} DESTINATION ${${PYWRAP}_INSTALL_DIR})
 
-FOREACH(python ${${PROJECT_NAME}_PYTHON_BINDINGS_FILES})
-  PYTHON_BUILD(. ${python})
-  INSTALL(FILES
-    "${${PROJECT_NAME}_SOURCE_DIR}/bindings/python/crocoddyl/${python}"
-    DESTINATION ${PYTHON_SITELIB}/${PROJECT_NAME})
-ENDFOREACH(python ${${PROJECT_NAME}_PYTHON_BINDINGS_FILES})
+foreach(python ${${PROJECT_NAME}_PYTHON_BINDINGS_FILES})
+  python_build(. ${python})
+  install(
+    FILES "${${PROJECT_NAME}_SOURCE_DIR}/bindings/python/crocoddyl/${python}"
+    DESTINATION ${${PYWRAP}_INSTALL_DIR})
+endforeach(python ${${PROJECT_NAME}_PYTHON_BINDINGS_FILES})
 
+set(${PROJECT_NAME}_BINDINGS_UTILS_PYTHON_FILES __init__.py pendulum.py
+                                                biped.py quadruped.py)
 
-SET(${PROJECT_NAME}_BINDINGS_UTILS_PYTHON_FILES
-  __init__.py
-  pendulum.py
-  biped.py
-  quadruped.py
-  )
-
-FOREACH(python ${${PROJECT_NAME}_BINDINGS_UTILS_PYTHON_FILES})
-  PYTHON_BUILD(utils ${python})
-  INSTALL(FILES
-    "${${PROJECT_NAME}_SOURCE_DIR}/bindings/python/crocoddyl/utils/${python}"
-    DESTINATION ${PYTHON_SITELIB}/${PROJECT_NAME}/utils)
-ENDFOREACH(python ${${PROJECT_NAME}_BINDINGS_UTILS_PYTHON_FILES})
+foreach(python ${${PROJECT_NAME}_BINDINGS_UTILS_PYTHON_FILES})
+  python_build(utils ${python})
+  install(
+    FILES
+      "${${PROJECT_NAME}_SOURCE_DIR}/bindings/python/crocoddyl/utils/${python}"
+    DESTINATION ${${PYWRAP}_INSTALL_DIR}/utils)
+endforeach(python ${${PROJECT_NAME}_BINDINGS_UTILS_PYTHON_FILES})
