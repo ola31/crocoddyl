@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.10)
 
 # Set up project properties
 set(PROJECT_NAMESPACE loco-3d)
@@ -13,13 +13,20 @@ option(INSTALL_DOCUMENTATION "Generate and install the documentation" OFF)
 # Check if the submodule cmake have been initialized
 set(JRL_CMAKE_MODULES "${CMAKE_CURRENT_LIST_DIR}/cmake")
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/cmake/base.cmake")
-  message(STATUS "JRL cmakemodules not found. Let's fetch it.")
-  include(FetchContent)
-  FetchContent_Declare(
-    "jrl-cmakemodules"
-    GIT_REPOSITORY "https://github.com/jrl-umi3218/jrl-cmakemodules.git")
-  FetchContent_MakeAvailable("jrl-cmakemodules")
-  FetchContent_GetProperties("jrl-cmakemodules" SOURCE_DIR JRL_CMAKE_MODULES)
+  if(${CMAKE_VERSION} VERSION_LESS "3.14.0")
+    message(
+      FATAL_ERROR
+        "\nPlease run the following command first:\ngit submodule update --init\n"
+    )
+  else()
+    message(STATUS "JRL cmakemodules not found. Let's fetch it.")
+    include(FetchContent)
+    FetchContent_Declare(
+      "jrl-cmakemodules"
+      GIT_REPOSITORY "https://github.com/jrl-umi3218/jrl-cmakemodules.git")
+    FetchContent_MakeAvailable("jrl-cmakemodules")
+    FetchContent_GetProperties("jrl-cmakemodules" SOURCE_DIR JRL_CMAKE_MODULES)
+  endif()
 endif()
 
 # Include important cmake modules
@@ -69,19 +76,31 @@ check_minimal_cxx_standard(14 ENFORCE)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/find-external/CppAD/"
                       ${CMAKE_MODULE_PATH})
+if(APPLE) # Use the handmade approach
+  set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake/find-external/OpenMP
+                        ${CMAKE_MODULE_PATH})
+elseif(UNIX)
+  if(${CMAKE_VERSION} VERSION_GREATER "3.20.0" OR ${CMAKE_VERSION}
+                                                  VERSION_EQUAL "3.20.0")
+    set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake/find-external/OpenMP
+                          ${CMAKE_MODULE_PATH})
+  endif()
+endif(APPLE)
 
 # Add the different required and optional dependencies
 if(BUILD_PYTHON_INTERFACE)
   add_project_dependency(eigenpy 2.8.0 REQUIRED PKG_CONFIG_REQUIRES
                          "eigenpy >= 2.8.0")
+  # workaround temporary issue in submodule
+  include("${JRL_CMAKE_MODULES}/python.cmake")
 endif(BUILD_PYTHON_INTERFACE)
 add_project_dependency(pinocchio 2.6.3 REQUIRED PKG_CONFIG_REQUIRES
                        "pinocchio >= 2.6.3")
 if(BUILD_EXAMPLES
    OR BUILD_TESTING
    OR BUILD_BENCHMARK)
-  add_project_dependency(example-robot-data 4.0.0 REQUIRED PKG_CONFIG_REQUIRES
-                         "example-robot-data >= 4.0.0")
+  add_project_dependency(example-robot-data 4.0.7 REQUIRED PKG_CONFIG_REQUIRES
+                         "example-robot-data >= 4.0.7")
 else()
   add_optional_dependency(example-robot-data)
 endif()
@@ -165,9 +184,9 @@ set(BOOST_REQUIRED_COMPONENTS filesystem serialization system)
 set(BOOST_BUILD_COMPONENTS unit_test_framework)
 set_boost_default_options()
 export_boost_default_options()
-add_project_dependency(Boost 1.71 REQUIRED COMPONENTS
+add_project_dependency(Boost 1.65 REQUIRED COMPONENTS
                        ${BOOST_REQUIRED_COMPONENTS})
-find_package(Boost 1.71 REQUIRED COMPONENTS ${BOOST_BUILD_COMPONENTS})
+find_package(Boost 1.65 REQUIRED COMPONENTS ${BOOST_BUILD_COMPONENTS})
 
 if(Boost_VERSION GREATER 107299)
   # Silence a warning about a deprecated use of boost bind by boost python at
