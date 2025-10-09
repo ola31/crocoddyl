@@ -1,7 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2020-2021, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2020-2025, LAAS-CNRS, University of Edinburgh,
+//                          Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -10,7 +11,6 @@
 #define CROCODDYL_MULTIBODY_RESIDUALS_CONTROL_GRAVITY_HPP_
 
 #include "crocoddyl/core/residual-base.hpp"
-#include "crocoddyl/core/utils/exception.hpp"
 #include "crocoddyl/multibody/data/multibody.hpp"
 #include "crocoddyl/multibody/states/multibody.hpp"
 
@@ -36,6 +36,7 @@ template <typename _Scalar>
 class ResidualModelControlGravTpl : public ResidualModelAbstractTpl<_Scalar> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  CROCODDYL_DERIVED_CAST(ResidualModelBase, ResidualModelControlGravTpl)
 
   typedef _Scalar Scalar;
   typedef MathBaseTpl<Scalar> MathBase;
@@ -53,7 +54,7 @@ class ResidualModelControlGravTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] state       State of the multibody system
    * @param[in] nu          Dimension of control vector
    */
-  ResidualModelControlGravTpl(boost::shared_ptr<StateMultibody> state,
+  ResidualModelControlGravTpl(std::shared_ptr<StateMultibody> state,
                               const std::size_t nu);
 
   /**
@@ -63,8 +64,8 @@ class ResidualModelControlGravTpl : public ResidualModelAbstractTpl<_Scalar> {
    *
    * @param[in] state       State of the multibody system
    */
-  ResidualModelControlGravTpl(boost::shared_ptr<StateMultibody> state);
-  virtual ~ResidualModelControlGravTpl();
+  ResidualModelControlGravTpl(std::shared_ptr<StateMultibody> state);
+  virtual ~ResidualModelControlGravTpl() = default;
 
   /**
    * @brief Compute the control gravity residual
@@ -73,16 +74,16 @@ class ResidualModelControlGravTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<ResidualDataAbstract> &data,
-                    const Eigen::Ref<const VectorXs> &x,
-                    const Eigen::Ref<const VectorXs> &u);
+  virtual void calc(const std::shared_ptr<ResidualDataAbstract>& data,
+                    const Eigen::Ref<const VectorXs>& x,
+                    const Eigen::Ref<const VectorXs>& u) override;
 
   /**
-   * @brief @copydoc Base::calc(const boost::shared_ptr<ResidualDataAbstract>&
+   * @brief @copydoc Base::calc(const std::shared_ptr<ResidualDataAbstract>&
    * data, const Eigen::Ref<const VectorXs>& x)
    */
-  virtual void calc(const boost::shared_ptr<ResidualDataAbstract> &data,
-                    const Eigen::Ref<const VectorXs> &x);
+  virtual void calc(const std::shared_ptr<ResidualDataAbstract>& data,
+                    const Eigen::Ref<const VectorXs>& x) override;
 
   /**
    * @brief Compute the Jacobians of the control gravity residual
@@ -91,32 +92,43 @@ class ResidualModelControlGravTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract> &data,
-                        const Eigen::Ref<const VectorXs> &x,
-                        const Eigen::Ref<const VectorXs> &u);
+  virtual void calcDiff(const std::shared_ptr<ResidualDataAbstract>& data,
+                        const Eigen::Ref<const VectorXs>& x,
+                        const Eigen::Ref<const VectorXs>& u) override;
 
   /**
    * @brief @copydoc Base::calcDiff(const
-   * boost::shared_ptr<ResidualDataAbstract>& data, const Eigen::Ref<const
+   * std::shared_ptr<ResidualDataAbstract>& data, const Eigen::Ref<const
    * VectorXs>& x)
    */
-  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract> &data,
-                        const Eigen::Ref<const VectorXs> &x);
+  virtual void calcDiff(const std::shared_ptr<ResidualDataAbstract>& data,
+                        const Eigen::Ref<const VectorXs>& x) override;
 
-  virtual boost::shared_ptr<ResidualDataAbstract> createData(
-      DataCollectorAbstract *const data);
+  virtual std::shared_ptr<ResidualDataAbstract> createData(
+      DataCollectorAbstract* const data) override;
+
+  /**
+   * @brief Cast the control-gravity residual model to a different scalar type.
+   *
+   * It is useful for operations requiring different precision or scalar types.
+   *
+   * @tparam NewScalar The new scalar type to cast to.
+   * @return ResidualModelControlGravTpl<NewScalar> A residual model with the
+   * new scalar type.
+   */
+  template <typename NewScalar>
+  ResidualModelControlGravTpl<NewScalar> cast() const;
 
   /**
    * @brief Print relevant information of the control-grav residual
    *
    * @param[out] os  Output stream object
    */
-  virtual void print(std::ostream &os) const;
+  virtual void print(std::ostream& os) const override;
 
  protected:
   using Base::nu_;
   using Base::state_;
-  using Base::unone_;
   using Base::v_dependent_;
 
  private:
@@ -136,26 +148,26 @@ struct ResidualDataControlGravTpl : public ResidualDataAbstractTpl<_Scalar> {
   typedef pinocchio::DataTpl<Scalar> PinocchioData;
 
   template <template <typename Scalar> class Model>
-  ResidualDataControlGravTpl(Model<Scalar> *const model,
-                             DataCollectorAbstract *const data)
+  ResidualDataControlGravTpl(Model<Scalar>* const model,
+                             DataCollectorAbstract* const data)
       : Base(model, data) {
     // Check that proper shared data has been passed
-    DataCollectorActMultibodyTpl<Scalar> *d =
-        dynamic_cast<DataCollectorActMultibodyTpl<Scalar> *>(shared);
+    DataCollectorActMultibodyTpl<Scalar>* d =
+        dynamic_cast<DataCollectorActMultibodyTpl<Scalar>*>(shared);
     if (d == NULL) {
       throw_pretty(
           "Invalid argument: the shared data should be derived from "
           "DataCollectorActMultibodyTpl");
     }
     // Avoids data casting at runtime
-    StateMultibody *sm =
-        static_cast<StateMultibody *>(model->get_state().get());
+    StateMultibody* sm = static_cast<StateMultibody*>(model->get_state().get());
     pinocchio = PinocchioData(*(sm->get_pinocchio().get()));
     actuation = d->actuation;
   }
+  virtual ~ResidualDataControlGravTpl() = default;
 
   PinocchioData pinocchio;  //!< Pinocchio data
-  boost::shared_ptr<ActuationDataAbstractTpl<Scalar> >
+  std::shared_ptr<ActuationDataAbstractTpl<Scalar> >
       actuation;  //!< Actuation data
   using Base::r;
   using Base::Ru;
@@ -169,5 +181,8 @@ struct ResidualDataControlGravTpl : public ResidualDataAbstractTpl<_Scalar> {
 /* --- Details -------------------------------------------------------------- */
 /* --- Details -------------------------------------------------------------- */
 #include "crocoddyl/multibody/residuals/control-gravity.hxx"
+
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_CLASS(crocoddyl::ResidualModelControlGravTpl)
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_STRUCT(crocoddyl::ResidualDataControlGravTpl)
 
 #endif  // CROCODDYL_MULTIBODY_RESIDUALS_CONTROL_GRAVITY_HPP_

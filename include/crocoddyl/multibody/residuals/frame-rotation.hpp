@@ -1,7 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2021, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2021-2025, LAAS-CNRS, University of Edinburgh,
+//                          Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -9,10 +10,7 @@
 #ifndef CROCODDYL_MULTIBODY_RESIDUALS_FRAME_ROTATION_HPP_
 #define CROCODDYL_MULTIBODY_RESIDUALS_FRAME_ROTATION_HPP_
 
-#include <pinocchio/multibody/fwd.hpp>
-
 #include "crocoddyl/core/residual-base.hpp"
-#include "crocoddyl/core/utils/exception.hpp"
 #include "crocoddyl/multibody/data/multibody.hpp"
 #include "crocoddyl/multibody/fwd.hpp"
 #include "crocoddyl/multibody/states/multibody.hpp"
@@ -38,6 +36,7 @@ template <typename _Scalar>
 class ResidualModelFrameRotationTpl : public ResidualModelAbstractTpl<_Scalar> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  CROCODDYL_DERIVED_CAST(ResidualModelBase, ResidualModelFrameRotationTpl)
 
   typedef _Scalar Scalar;
   typedef MathBaseTpl<Scalar> MathBase;
@@ -57,7 +56,7 @@ class ResidualModelFrameRotationTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] Rref   Reference frame rotation
    * @param[in] nu     Dimension of the control vector
    */
-  ResidualModelFrameRotationTpl(boost::shared_ptr<StateMultibody> state,
+  ResidualModelFrameRotationTpl(std::shared_ptr<StateMultibody> state,
                                 const pinocchio::FrameIndex id,
                                 const Matrix3s& Rref, const std::size_t nu);
 
@@ -70,10 +69,10 @@ class ResidualModelFrameRotationTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] id     Reference frame id
    * @param[in] Rref   Reference frame rotation
    */
-  ResidualModelFrameRotationTpl(boost::shared_ptr<StateMultibody> state,
+  ResidualModelFrameRotationTpl(std::shared_ptr<StateMultibody> state,
                                 const pinocchio::FrameIndex id,
                                 const Matrix3s& Rref);
-  virtual ~ResidualModelFrameRotationTpl();
+  virtual ~ResidualModelFrameRotationTpl() = default;
 
   /**
    * @brief Compute the frame rotation residual
@@ -82,9 +81,9 @@ class ResidualModelFrameRotationTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data,
+  virtual void calc(const std::shared_ptr<ResidualDataAbstract>& data,
                     const Eigen::Ref<const VectorXs>& x,
-                    const Eigen::Ref<const VectorXs>& u);
+                    const Eigen::Ref<const VectorXs>& u) override;
 
   /**
    * @brief Compute the derivatives of the frame rotation residual
@@ -93,15 +92,27 @@ class ResidualModelFrameRotationTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
+  virtual void calcDiff(const std::shared_ptr<ResidualDataAbstract>& data,
                         const Eigen::Ref<const VectorXs>& x,
-                        const Eigen::Ref<const VectorXs>& u);
+                        const Eigen::Ref<const VectorXs>& u) override;
 
   /**
    * @brief Create the frame rotation residual data
    */
-  virtual boost::shared_ptr<ResidualDataAbstract> createData(
-      DataCollectorAbstract* const data);
+  virtual std::shared_ptr<ResidualDataAbstract> createData(
+      DataCollectorAbstract* const data) override;
+
+  /**
+   * @brief Cast the frame-rotation residual model to a different scalar type.
+   *
+   * It is useful for operations requiring different precision or scalar types.
+   *
+   * @tparam NewScalar The new scalar type to cast to.
+   * @return ResidualModelFrameRotationTpl<NewScalar> A residual model with the
+   * new scalar type.
+   */
+  template <typename NewScalar>
+  ResidualModelFrameRotationTpl<NewScalar> cast() const;
 
   /**
    * @brief Return the reference frame id
@@ -128,20 +139,19 @@ class ResidualModelFrameRotationTpl : public ResidualModelAbstractTpl<_Scalar> {
    *
    * @param[out] os  Output stream object
    */
-  virtual void print(std::ostream& os) const;
+  virtual void print(std::ostream& os) const override;
 
  protected:
   using Base::nu_;
   using Base::state_;
   using Base::u_dependent_;
-  using Base::unone_;
   using Base::v_dependent_;
 
  private:
   pinocchio::FrameIndex id_;  //!< Reference frame id
   Matrix3s Rref_;             //!< Reference frame rotation
   Matrix3s oRf_inv_;          //!< Inverse reference rotation
-  boost::shared_ptr<typename StateMultibody::PinocchioModel>
+  std::shared_ptr<typename StateMultibody::PinocchioModel>
       pin_model_;  //!< Pinocchio model
 };
 
@@ -178,6 +188,7 @@ struct ResidualDataFrameRotationTpl : public ResidualDataAbstractTpl<_Scalar> {
     // Avoids data casting at runtime
     pinocchio = d->pinocchio;
   }
+  virtual ~ResidualDataFrameRotationTpl() = default;
 
   pinocchio::DataTpl<Scalar>* pinocchio;  //!< Pinocchio data
   Matrix3s rRf;                           //!< Rotation error of the frame
@@ -196,5 +207,10 @@ struct ResidualDataFrameRotationTpl : public ResidualDataAbstractTpl<_Scalar> {
 /* --- Details -------------------------------------------------------------- */
 /* --- Details -------------------------------------------------------------- */
 #include "crocoddyl/multibody/residuals/frame-rotation.hxx"
+
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_CLASS(
+    crocoddyl::ResidualModelFrameRotationTpl)
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_STRUCT(
+    crocoddyl::ResidualDataFrameRotationTpl)
 
 #endif  // CROCODDYL_MULTIBODY_RESIDUALS_FRAME_ROTATION_HPP_

@@ -1,35 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, University of Edinburgh, University of Oxford
+// Copyright (C) 2019-2025, University of Edinburgh, University of Oxford,
+//                          Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <math.h>
-
-#include <iostream>
-
 namespace crocoddyl {
-
-template <typename Scalar>
-FrictionConeTpl<Scalar>::FrictionConeTpl()
-    : nf_(4),
-      A_(nf_ + 1, 3),
-      ub_(nf_ + 1),
-      lb_(nf_ + 1),
-      R_(Matrix3s::Identity()),
-      mu_(Scalar(0.7)),
-      inner_appr_(true),
-      min_nforce_(Scalar(0.)),
-      max_nforce_(std::numeric_limits<Scalar>::infinity()) {
-  A_.setZero();
-  ub_.setZero();
-  lb_.setZero();
-
-  // Update the inequality matrix and bounds
-  update();
-}
 
 template <typename Scalar>
 FrictionConeTpl<Scalar>::FrictionConeTpl(const Matrix3s& R, const Scalar mu,
@@ -71,49 +49,19 @@ FrictionConeTpl<Scalar>::FrictionConeTpl(const Matrix3s& R, const Scalar mu,
 }
 
 template <typename Scalar>
-FrictionConeTpl<Scalar>::FrictionConeTpl(const Vector3s& nsurf, const Scalar mu,
-                                         std::size_t nf, const bool inner_appr,
-                                         const Scalar min_nforce,
-                                         const Scalar max_nforce)
-    : nf_(nf),
-      R_(Quaternions::FromTwoVectors(nsurf, Vector3s::UnitZ())
-             .toRotationMatrix()),
-      mu_(mu),
-      inner_appr_(inner_appr),
-      min_nforce_(min_nforce),
-      max_nforce_(max_nforce) {
-  if (nf_ % 2 != 0) {
-    nf_ = 4;
-    std::cerr << "Warning: nf has to be an even number, set to 4" << std::endl;
-  }
-  Eigen::Vector3d normal = nsurf;
-  if (!nsurf.isUnitary()) {
-    normal /= nsurf.norm();
-    std::cerr
-        << "Warning: normal is not an unitary vector, then we normalized it"
-        << std::endl;
-  }
-  if (mu < Scalar(0.)) {
-    mu_ = Scalar(1.);
-    std::cerr << "Warning: mu has to be a positive value, set to 1."
-              << std::endl;
-  }
-  if (min_nforce < Scalar(0.)) {
-    min_nforce_ = Scalar(0.);
-    std::cerr << "Warning: min_nforce has to be a positive value, set to 0"
-              << std::endl;
-  }
-  if (max_nforce < Scalar(0.)) {
-    max_nforce_ = std::numeric_limits<Scalar>::infinity();
-    std::cerr << "Warning: max_nforce has to be a positive value, set to "
-                 "infinity value"
-              << std::endl;
-  }
-  A_ = MatrixX3s::Zero(nf_ + 1, 3);
-  ub_ = VectorXs::Zero(nf_ + 1);
-  lb_ = VectorXs::Zero(nf_ + 1);
-  R_ =
-      Quaternions::FromTwoVectors(normal, Vector3s::UnitZ()).toRotationMatrix();
+FrictionConeTpl<Scalar>::FrictionConeTpl()
+    : nf_(4),
+      A_(nf_ + 1, 3),
+      ub_(nf_ + 1),
+      lb_(nf_ + 1),
+      R_(Matrix3s::Identity()),
+      mu_(Scalar(0.7)),
+      inner_appr_(true),
+      min_nforce_(Scalar(0.)),
+      max_nforce_(std::numeric_limits<Scalar>::infinity()) {
+  A_.setZero();
+  ub_.setZero();
+  lb_.setZero();
 
   // Update the inequality matrix and bounds
   update();
@@ -144,10 +92,14 @@ void FrictionConeTpl<Scalar>::update() {
 
   // Compute the mu given the type of friction cone approximation
   Scalar mu = mu_;
-  const Scalar theta = Scalar(2) * M_PI / static_cast<Scalar>(nf_);
+  const Scalar theta =
+      static_cast<Scalar>(2.0) * pi<Scalar>() / static_cast<Scalar>(nf_);
   if (inner_appr_) {
-    mu *= cos(theta / Scalar(2.));
+    mu *= cos(theta * Scalar(0.5));
   }
+
+  // Create a temporary object for computation
+  Matrix3s R_transpose = R_.transpose();
 
   // Update the inequality matrix and the bounds
   // This matrix is defined as
@@ -158,15 +110,16 @@ void FrictionConeTpl<Scalar>::update() {
   //   0  0   1]
   Scalar theta_i;
   Vector3s tsurf_i;
+  Vector3s mu_nsurf =
+      -mu * Vector3s::UnitZ();  // We can pull this out because it's reused.
+  std::size_t row = 0;
   for (std::size_t i = 0; i < nf_ / 2; ++i) {
     theta_i = theta * static_cast<Scalar>(i);
     tsurf_i << cos(theta_i), sin(theta_i), Scalar(0.);
-    A_.row(2 * i) =
-        (-mu * Vector3s::UnitZ() + tsurf_i).transpose() * R_.transpose();
-    A_.row(2 * i + 1) =
-        (-mu * Vector3s::UnitZ() - tsurf_i).transpose() * R_.transpose();
+    A_.row(row++) = (mu_nsurf + tsurf_i).transpose() * R_transpose;
+    A_.row(row++) = (mu_nsurf - tsurf_i).transpose() * R_transpose;
   }
-  A_.row(nf_) = R_.col(2).transpose();
+  A_.row(nf_) = R_transpose.row(2);
   lb_(nf_) = min_nforce_;
   ub_(nf_) = max_nforce_;
 }
@@ -176,7 +129,7 @@ void FrictionConeTpl<Scalar>::update(const Vector3s& normal, const Scalar mu,
                                      const bool inner_appr,
                                      const Scalar min_nforce,
                                      const Scalar max_nforce) {
-  Eigen::Vector3d nsurf = normal;
+  Vector3s nsurf = normal;
   // Sanity checks
   if (!nsurf.isUnitary()) {
     nsurf /= normal.norm();
@@ -192,6 +145,16 @@ void FrictionConeTpl<Scalar>::update(const Vector3s& normal, const Scalar mu,
 
   // Update the inequality matrix and bounds
   update();
+}
+
+template <typename Scalar>
+template <typename NewScalar>
+FrictionConeTpl<NewScalar> FrictionConeTpl<Scalar>::cast() const {
+  typedef FrictionConeTpl<NewScalar> ReturnType;
+  ReturnType ret(R_.template cast<NewScalar>(), scalar_cast<NewScalar>(mu_),
+                 nf_, inner_appr_, scalar_cast<NewScalar>(min_nforce_),
+                 scalar_cast<NewScalar>(max_nforce_));
+  return ret;
 }
 
 template <typename Scalar>
@@ -255,7 +218,7 @@ void FrictionConeTpl<Scalar>::set_R(const Matrix3s& R) {
 
 template <typename Scalar>
 void FrictionConeTpl<Scalar>::set_nsurf(const Vector3s& nsurf) {
-  Eigen::Vector3d normal = nsurf;
+  Vector3s normal = nsurf;
   // Sanity checks
   if (!nsurf.isUnitary()) {
     normal /= nsurf.norm();

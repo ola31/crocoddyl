@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2022, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2025, LAAS-CNRS, University of Edinburgh
 //                          Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
@@ -12,19 +12,22 @@
 
 #include <pinocchio/fwd.hpp>
 
+#ifdef CROCODDYL_WITH_CODEGEN
+#include <pinocchio/codegen/cppadcg.hpp>
+#endif
+
 #include "python/crocoddyl/fwd.hpp"
 
 namespace crocoddyl {
 namespace python {
 
-void exposeFrames();
 void exposeFrictionCone();
 void exposeWrenchCone();
 void exposeCoPSupport();
 void exposeStateMultibody();
 void exposeActuationFloatingBase();
 void exposeActuationFull();
-void exposeActuationModelMultiCopterBase();
+void exposeActuationFloatingBaseThruster();
 void exposeForceAbstract();
 void exposeContactAbstract();
 void exposeImpulseAbstract();
@@ -54,7 +57,9 @@ void exposeResidualFrameVelocity();
 void exposeResidualImpulseCoM();
 
 #ifdef PINOCCHIO_WITH_HPP_FCL
+#ifdef CROCODDYL_WITH_PAIR_COLLISION
 void exposeResidualPairCollision();
+#endif
 #endif
 
 void exposeContact1D();
@@ -63,7 +68,6 @@ void exposeContact3D();
 void exposeContact6D();
 void exposeImpulse3D();
 void exposeImpulse6D();
-
 void exposeMultibody();
 
 }  // namespace python

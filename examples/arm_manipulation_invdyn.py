@@ -3,10 +3,11 @@ import signal
 import sys
 import time
 
-import crocoddyl
 import example_robot_data
 import numpy as np
 import pinocchio
+
+import crocoddyl
 
 WITHDISPLAY = "display" in sys.argv or "CROCODDYL_DISPLAY" in os.environ
 WITHPLOT = "plot" in sys.argv or "CROCODDYL_PLOT" in os.environ
@@ -77,27 +78,6 @@ problem = crocoddyl.ShootingProblem(x0, [runningModel] * T, terminalModel)
 
 # Creating the solver for this OC problem, defining a logger
 solver = crocoddyl.SolverIntro(problem)
-cameraTF = [2.0, 2.68, 0.54, 0.2, 0.62, 0.72, 0.22]
-if WITHDISPLAY:
-    try:
-        import gepetto
-
-        gepetto.corbaserver.Client()
-        display = crocoddyl.GepettoDisplay(kinova, 4, 4, cameraTF, floor=False)
-        if WITHPLOT:
-            solver.setCallbacks(
-                [
-                    crocoddyl.CallbackVerbose(),
-                    crocoddyl.CallbackLogger(),
-                    crocoddyl.CallbackDisplay(display),
-                ]
-            )
-        else:
-            solver.setCallbacks(
-                [crocoddyl.CallbackVerbose(), crocoddyl.CallbackDisplay(display)]
-            )
-    except Exception:
-        display = crocoddyl.MeshcatDisplay(kinova)
 if WITHPLOT:
     solver.setCallbacks(
         [
@@ -107,8 +87,6 @@ if WITHPLOT:
     )
 else:
     solver.setCallbacks([crocoddyl.CallbackVerbose()])
-solver.getCallbacks()[0].precision = 3
-solver.getCallbacks()[0].level = crocoddyl.VerboseLevel._2
 
 # Solving it with the solver algorithm
 solver.solve()
@@ -130,11 +108,20 @@ if WITHPLOT:
         show=False,
     )
     crocoddyl.plotConvergence(
-        log.costs, log.u_regs, log.x_regs, log.grads, log.stops, log.steps, figIndex=2
+        log.costs, log.pregs, log.dregs, log.grads, log.stops, log.steps, figIndex=2
     )
 
 # Visualizing the solution in gepetto-viewer
 if WITHDISPLAY:
+    try:
+        import gepetto
+
+        cameraTF = [2.0, 2.68, 0.54, 0.2, 0.62, 0.72, 0.22]
+        gepetto.corbaserver.Client()
+        display = crocoddyl.GepettoDisplay(kinova, 4, 4, cameraTF, floor=False)
+    except Exception:
+        display = crocoddyl.MeshcatDisplay(kinova)
+
     display.rate = -1
     display.freq = 1
     while True:

@@ -9,9 +9,6 @@
 #ifndef CROCODDYL_CONTACTS_FACTORY_HPP_
 #define CROCODDYL_CONTACTS_FACTORY_HPP_
 
-#include <iostream>
-#include <limits>
-
 #include "crocoddyl/multibody/contact-base.hpp"
 #include "crocoddyl/multibody/contacts/multiple-contacts.hpp"
 #include "crocoddyl/multibody/numdiff/contact.hpp"
@@ -22,7 +19,9 @@ namespace unittest {
 
 struct ContactModelTypes {
   enum Type {
-    ContactModel1D,
+    ContactModel1D_LOCAL,
+    ContactModel1D_WORLD,
+    ContactModel1D_LWA,
     ContactModel2D,
     ContactModel3D_LOCAL,
     ContactModel3D_WORLD,
@@ -52,14 +51,14 @@ class ContactModelFactory {
   explicit ContactModelFactory();
   ~ContactModelFactory();
 
-  boost::shared_ptr<crocoddyl::ContactModelAbstract> create(
+  std::shared_ptr<crocoddyl::ContactModelAbstract> create(
       ContactModelTypes::Type contact_type,
       PinocchioModelTypes::Type model_type, Eigen::Vector2d gains,
       const std::string frame_name = std::string(""),
       const std::size_t nu = std::numeric_limits<std::size_t>::max()) const;
 };
 
-boost::shared_ptr<crocoddyl::ContactModelAbstract> create_random_contact();
+std::shared_ptr<crocoddyl::ContactModelAbstract> create_random_contact();
 
 }  // namespace unittest
 }  // namespace crocoddyl

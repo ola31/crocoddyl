@@ -3,10 +3,11 @@ import signal
 import sys
 import time
 
-import crocoddyl
 import example_robot_data
 import numpy as np
 import pinocchio
+
+import crocoddyl
 from crocoddyl.utils.quadruped import SimpleQuadrupedalGaitProblem, plotSolution
 
 WITHDISPLAY = "display" in sys.argv or "CROCODDYL_DISPLAY" in os.environ
@@ -52,31 +53,6 @@ solver = crocoddyl.SolverBoxDDP(
 
 # Add the callback functions
 print("*** SOLVE ***")
-cameraTF = [2.0, 2.68, 0.84, 0.2, 0.62, 0.72, 0.22]
-if WITHDISPLAY:
-    try:
-        import gepetto
-
-        gepetto.corbaserver.Client()
-        display = crocoddyl.GepettoDisplay(
-            anymal, 4, 4, cameraTF, frameNames=[lfFoot, rfFoot, lhFoot, rhFoot]
-        )
-        if WITHPLOT:
-            solver.setCallbacks(
-                [
-                    crocoddyl.CallbackVerbose(),
-                    crocoddyl.CallbackLogger(),
-                    crocoddyl.CallbackDisplay(display),
-                ]
-            )
-        else:
-            solver.setCallbacks(
-                [crocoddyl.CallbackVerbose(), crocoddyl.CallbackDisplay(display)]
-            )
-    except Exception:
-        display = crocoddyl.MeshcatDisplay(
-            anymal, frameNames=[lfFoot, rfFoot, lhFoot, rhFoot]
-        )
 if WITHPLOT:
     solver.setCallbacks(
         [
@@ -86,8 +62,6 @@ if WITHPLOT:
     )
 else:
     solver.setCallbacks([crocoddyl.CallbackVerbose()])
-solver.getCallbacks()[0].precision = 3
-solver.getCallbacks()[0].level = crocoddyl.VerboseLevel._2
 
 # Solve the DDP problem
 xs = [x0] * (solver.problem.T + 1)
@@ -103,8 +77,8 @@ if WITHPLOT:
     log = solver.getCallbacks()[1]
     crocoddyl.plotConvergence(
         log.costs,
-        log.u_regs,
-        log.x_regs,
+        log.pregs,
+        log.dregs,
         log.grads,
         log.stops,
         log.steps,
@@ -114,6 +88,14 @@ if WITHPLOT:
 
 # Display the entire motion
 if WITHDISPLAY:
+    try:
+        import gepetto
+
+        gepetto.corbaserver.Client()
+        cameraTF = [2.0, 2.68, 0.84, 0.2, 0.62, 0.72, 0.22]
+        display = crocoddyl.GepettoDisplay(anymal, 4, 4, cameraTF)
+    except Exception:
+        display = crocoddyl.MeshcatDisplay(anymal)
     display.rate = -1
     display.freq = 1
     while True:

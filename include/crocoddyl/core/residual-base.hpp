@@ -1,16 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2021-2023, University of Edinburgh, Heriot-Watt University
+// Copyright (C) 2021-2025, University of Edinburgh, Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef CROCODDYL_CORE_RESIDUAL_BASE_HPP_
 #define CROCODDYL_CORE_RESIDUAL_BASE_HPP_
-
-#include <boost/make_shared.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include "crocoddyl/core/activation-base.hpp"
 #include "crocoddyl/core/cost-base.hpp"
@@ -19,6 +16,13 @@
 #include "crocoddyl/core/state-base.hpp"
 
 namespace crocoddyl {
+
+class ResidualModelBase {
+ public:
+  virtual ~ResidualModelBase() = default;
+
+  CROCODDYL_BASE_CAST(ResidualModelBase, ResidualModelAbstractTpl)
+};
 
 /**
  * @brief Abstract class for residual models
@@ -41,9 +45,10 @@ namespace crocoddyl {
  * \sa `StateAbstractTpl`, `calc()`, `calcDiff()`, `createData()`
  */
 template <typename _Scalar>
-class ResidualModelAbstractTpl {
+class ResidualModelAbstractTpl : public ResidualModelBase {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  CROCODDYL_BASE_DERIVED_CAST(ResidualModelBase, ResidualModelAbstractTpl)
 
   typedef _Scalar Scalar;
   typedef MathBaseTpl<Scalar> MathBase;
@@ -69,7 +74,7 @@ class ResidualModelAbstractTpl {
    * @param[in] u_dependent  Define if the residual function depends on u
    * (default true)
    */
-  ResidualModelAbstractTpl(boost::shared_ptr<StateAbstract> state,
+  ResidualModelAbstractTpl(std::shared_ptr<StateAbstract> state,
                            const std::size_t nr, const std::size_t nu,
                            const bool q_dependent = true,
                            const bool v_dependent = true,
@@ -89,11 +94,11 @@ class ResidualModelAbstractTpl {
    * @param[in] u_dependent  Define if the residual function depends on u
    * (default true)
    */
-  ResidualModelAbstractTpl(boost::shared_ptr<StateAbstract> state,
+  ResidualModelAbstractTpl(std::shared_ptr<StateAbstract> state,
                            const std::size_t nr, const bool q_dependent = true,
                            const bool v_dependent = true,
                            const bool u_dependent = true);
-  virtual ~ResidualModelAbstractTpl();
+  virtual ~ResidualModelAbstractTpl() = default;
 
   /**
    * @brief Compute the residual vector
@@ -102,7 +107,7 @@ class ResidualModelAbstractTpl {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data,
+  virtual void calc(const std::shared_ptr<ResidualDataAbstract>& data,
                     const Eigen::Ref<const VectorXs>& x,
                     const Eigen::Ref<const VectorXs>& u);
 
@@ -115,7 +120,7 @@ class ResidualModelAbstractTpl {
    * @param[in] data  Residual data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    */
-  virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data,
+  virtual void calc(const std::shared_ptr<ResidualDataAbstract>& data,
                     const Eigen::Ref<const VectorXs>& x);
 
   /**
@@ -128,7 +133,7 @@ class ResidualModelAbstractTpl {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
+  virtual void calcDiff(const std::shared_ptr<ResidualDataAbstract>& data,
                         const Eigen::Ref<const VectorXs>& x,
                         const Eigen::Ref<const VectorXs>& u);
 
@@ -142,7 +147,7 @@ class ResidualModelAbstractTpl {
    * @param[in] data  Residual data
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    */
-  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
+  virtual void calcDiff(const std::shared_ptr<ResidualDataAbstract>& data,
                         const Eigen::Ref<const VectorXs>& x);
 
   /**
@@ -156,7 +161,7 @@ class ResidualModelAbstractTpl {
    * @param data  Data collector
    * @return the residual data
    */
-  virtual boost::shared_ptr<ResidualDataAbstract> createData(
+  virtual std::shared_ptr<ResidualDataAbstract> createData(
       DataCollectorAbstract* const data);
 
   /**
@@ -172,15 +177,15 @@ class ResidualModelAbstractTpl {
    * control if True.
    */
   virtual void calcCostDiff(
-      const boost::shared_ptr<CostDataAbstract>& cdata,
-      const boost::shared_ptr<ResidualDataAbstract>& rdata,
-      const boost::shared_ptr<ActivationDataAbstract>& adata,
+      const std::shared_ptr<CostDataAbstract>& cdata,
+      const std::shared_ptr<ResidualDataAbstract>& rdata,
+      const std::shared_ptr<ActivationDataAbstract>& adata,
       const bool update_u = true);
 
   /**
    * @brief Return the state
    */
-  const boost::shared_ptr<StateAbstract>& get_state() const;
+  const std::shared_ptr<StateAbstract>& get_state() const;
 
   /**
    * @brief Return the dimension of the residual vector
@@ -222,16 +227,23 @@ class ResidualModelAbstractTpl {
   virtual void print(std::ostream& os) const;
 
  protected:
-  boost::shared_ptr<StateAbstract> state_;  //!< State description
-  std::size_t nr_;                          //!< Residual vector dimension
-  std::size_t nu_;                          //!< Control dimension
-  VectorXs unone_;                          //!< No control vector
+  std::shared_ptr<StateAbstract> state_;  //!< State description
+  std::size_t nr_;                        //!< Residual vector dimension
+  std::size_t nu_;                        //!< Control dimension
+  VectorXs unone_;                        //!< No control vector
   bool q_dependent_;  //!< Label that indicates if the residual function depends
                       //!< on q
   bool v_dependent_;  //!< Label that indicates if the residual function depends
                       //!< on v
   bool u_dependent_;  //!< Label that indicates if the residual function depends
                       //!< on u
+  ResidualModelAbstractTpl()
+      : state_(nullptr),
+        nr_(0),
+        nu_(0),
+        q_dependent_(false),
+        v_dependent_(false),
+        u_dependent_(false) {};
 };
 
 template <typename _Scalar>
@@ -259,7 +271,7 @@ struct ResidualDataAbstractTpl {
     Arr_Rx.setZero();
     Arr_Ru.setZero();
   }
-  virtual ~ResidualDataAbstractTpl() {}
+  virtual ~ResidualDataAbstractTpl() = default;
 
   DataCollectorAbstract* shared;  //!< Shared data allocated by the action model
   VectorXs r;                     //!< Residual vector
@@ -275,5 +287,8 @@ struct ResidualDataAbstractTpl {
 /* --- Details -------------------------------------------------------------- */
 /* --- Details -------------------------------------------------------------- */
 #include "crocoddyl/core/residual-base.hxx"
+
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_CLASS(crocoddyl::ResidualModelAbstractTpl)
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_STRUCT(crocoddyl::ResidualDataAbstractTpl)
 
 #endif  // CROCODDYL_CORE_RESIDUAL_BASE_HPP_

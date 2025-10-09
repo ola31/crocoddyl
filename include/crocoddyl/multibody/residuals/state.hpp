@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2022-2023, LAAS-CNRS, University of Edinburgh,
+// Copyright (C) 2022-2025, LAAS-CNRS, University of Edinburgh,
 //                          Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
@@ -38,13 +38,15 @@ template <typename _Scalar>
 class ResidualModelStateTpl : public ResidualModelAbstractTpl<_Scalar> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  CROCODDYL_DERIVED_CAST(ResidualModelBase, ResidualModelStateTpl)
 
   typedef _Scalar Scalar;
   typedef MathBaseTpl<Scalar> MathBase;
   typedef ResidualModelAbstractTpl<Scalar> Base;
   typedef StateMultibodyTpl<Scalar> StateMultibody;
   typedef ResidualDataAbstractTpl<Scalar> ResidualDataAbstract;
-  typedef ActivationModelAbstractTpl<Scalar> ActivationModelAbstract;
+  typedef CostDataAbstractTpl<Scalar> CostDataAbstract;
+  typedef ActivationDataAbstractTpl<Scalar> ActivationDataAbstract;
   typedef DataCollectorAbstractTpl<Scalar> DataCollectorAbstract;
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
@@ -56,7 +58,7 @@ class ResidualModelStateTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] xref        Reference state
    * @param[in] nu          Dimension of the control vector
    */
-  ResidualModelStateTpl(boost::shared_ptr<typename Base::StateAbstract> state,
+  ResidualModelStateTpl(std::shared_ptr<typename Base::StateAbstract> state,
                         const VectorXs& xref, const std::size_t nu);
 
   /**
@@ -67,7 +69,7 @@ class ResidualModelStateTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] state       State of the multibody system
    * @param[in] xref        Reference state
    */
-  ResidualModelStateTpl(boost::shared_ptr<typename Base::StateAbstract> state,
+  ResidualModelStateTpl(std::shared_ptr<typename Base::StateAbstract> state,
                         const VectorXs& xref);
 
   /**
@@ -78,7 +80,7 @@ class ResidualModelStateTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] state  State of the multibody system
    * @param[in] nu     Dimension of the control vector
    */
-  ResidualModelStateTpl(boost::shared_ptr<typename Base::StateAbstract> state,
+  ResidualModelStateTpl(std::shared_ptr<typename Base::StateAbstract> state,
                         const std::size_t nu);
 
   /**
@@ -90,8 +92,8 @@ class ResidualModelStateTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] state       State of the multibody system
    * @param[in] activation  Activation model
    */
-  ResidualModelStateTpl(boost::shared_ptr<typename Base::StateAbstract> state);
-  virtual ~ResidualModelStateTpl();
+  ResidualModelStateTpl(std::shared_ptr<typename Base::StateAbstract> state);
+  virtual ~ResidualModelStateTpl() = default;
 
   /**
    * @brief Compute the state residual
@@ -100,9 +102,9 @@ class ResidualModelStateTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<ResidualDataAbstract>& data,
+  virtual void calc(const std::shared_ptr<ResidualDataAbstract>& data,
                     const Eigen::Ref<const VectorXs>& x,
-                    const Eigen::Ref<const VectorXs>& u);
+                    const Eigen::Ref<const VectorXs>& u) override;
 
   /**
    * @brief Compute the Jacobians of the state residual
@@ -111,9 +113,9 @@ class ResidualModelStateTpl : public ResidualModelAbstractTpl<_Scalar> {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calcDiff(const boost::shared_ptr<ResidualDataAbstract>& data,
+  virtual void calcDiff(const std::shared_ptr<ResidualDataAbstract>& data,
                         const Eigen::Ref<const VectorXs>& x,
-                        const Eigen::Ref<const VectorXs>& u);
+                        const Eigen::Ref<const VectorXs>& u) override;
 
   /**
    * @brief Compute the derivative of the state-cost function and store it in
@@ -129,10 +131,22 @@ class ResidualModelStateTpl : public ResidualModelAbstractTpl<_Scalar> {
    * control if True.
    */
   virtual void calcCostDiff(
-      const boost::shared_ptr<CostDataAbstract>& cdata,
-      const boost::shared_ptr<ResidualDataAbstract>& rdata,
-      const boost::shared_ptr<ActivationDataAbstract>& adata,
-      const bool update_u = true);
+      const std::shared_ptr<CostDataAbstract>& cdata,
+      const std::shared_ptr<ResidualDataAbstract>& rdata,
+      const std::shared_ptr<ActivationDataAbstract>& adata,
+      const bool update_u = true) override;
+
+  /**
+   * @brief Cast the state residual model to a different scalar type.
+   *
+   * It is useful for operations requiring different precision or scalar types.
+   *
+   * @tparam NewScalar The new scalar type to cast to.
+   * @return ResidualModelStateTpl<NewScalar> A residual model with the
+   * new scalar type.
+   */
+  template <typename NewScalar>
+  ResidualModelStateTpl<NewScalar> cast() const;
 
   /**
    * @brief Return the reference state
@@ -149,18 +163,17 @@ class ResidualModelStateTpl : public ResidualModelAbstractTpl<_Scalar> {
    *
    * @param[out] os  Output stream object
    */
-  virtual void print(std::ostream& os) const;
+  virtual void print(std::ostream& os) const override;
 
  protected:
   using Base::nr_;
   using Base::nu_;
   using Base::state_;
   using Base::u_dependent_;
-  using Base::unone_;
 
  private:
   VectorXs xref_;  //!< Reference state
-  boost::shared_ptr<typename StateMultibody::PinocchioModel>
+  std::shared_ptr<typename StateMultibody::PinocchioModel>
       pin_model_;  //!< Pinocchio model
 };
 
@@ -170,5 +183,10 @@ class ResidualModelStateTpl : public ResidualModelAbstractTpl<_Scalar> {
 /* --- Details -------------------------------------------------------------- */
 /* --- Details -------------------------------------------------------------- */
 #include "crocoddyl/multibody/residuals/state.hxx"
+
+extern template class CROCODDYL_EXPLICIT_INSTANTIATION_DECLARATION_DLLAPI
+    crocoddyl::ResidualModelStateTpl<double>;
+extern template class CROCODDYL_EXPLICIT_INSTANTIATION_DECLARATION_DLLAPI
+    crocoddyl::ResidualModelStateTpl<float>;
 
 #endif  // CROCODDYL_MULTIBODY_RESIDUALS_STATE_HPP_

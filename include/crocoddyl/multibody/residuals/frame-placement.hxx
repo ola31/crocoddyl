@@ -1,20 +1,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2021-2022, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2021-2025, LAAS-CNRS, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
-
-#include <pinocchio/algorithm/frames.hpp>
-
-#include "crocoddyl/multibody/residuals/frame-placement.hpp"
 
 namespace crocoddyl {
 
 template <typename Scalar>
 ResidualModelFramePlacementTpl<Scalar>::ResidualModelFramePlacementTpl(
-    boost::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id,
+    std::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id,
     const SE3& pref, const std::size_t nu)
     : Base(state, 6, nu, true, false, false),
       id_(id),
@@ -31,7 +27,7 @@ ResidualModelFramePlacementTpl<Scalar>::ResidualModelFramePlacementTpl(
 
 template <typename Scalar>
 ResidualModelFramePlacementTpl<Scalar>::ResidualModelFramePlacementTpl(
-    boost::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id,
+    std::shared_ptr<StateMultibody> state, const pinocchio::FrameIndex id,
     const SE3& pref)
     : Base(state, 6, true, false, false),
       id_(id),
@@ -47,11 +43,8 @@ ResidualModelFramePlacementTpl<Scalar>::ResidualModelFramePlacementTpl(
 }
 
 template <typename Scalar>
-ResidualModelFramePlacementTpl<Scalar>::~ResidualModelFramePlacementTpl() {}
-
-template <typename Scalar>
 void ResidualModelFramePlacementTpl<Scalar>::calc(
-    const boost::shared_ptr<ResidualDataAbstract>& data,
+    const std::shared_ptr<ResidualDataAbstract>& data,
     const Eigen::Ref<const VectorXs>&, const Eigen::Ref<const VectorXs>&) {
   Data* d = static_cast<Data*>(data.get());
 
@@ -63,7 +56,7 @@ void ResidualModelFramePlacementTpl<Scalar>::calc(
 
 template <typename Scalar>
 void ResidualModelFramePlacementTpl<Scalar>::calcDiff(
-    const boost::shared_ptr<ResidualDataAbstract>& data,
+    const std::shared_ptr<ResidualDataAbstract>& data,
     const Eigen::Ref<const VectorXs>&, const Eigen::Ref<const VectorXs>&) {
   Data* d = static_cast<Data*>(data.get());
 
@@ -76,11 +69,23 @@ void ResidualModelFramePlacementTpl<Scalar>::calcDiff(
 }
 
 template <typename Scalar>
-boost::shared_ptr<ResidualDataAbstractTpl<Scalar> >
+std::shared_ptr<ResidualDataAbstractTpl<Scalar> >
 ResidualModelFramePlacementTpl<Scalar>::createData(
     DataCollectorAbstract* const data) {
-  return boost::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this,
-                                      data);
+  return std::allocate_shared<Data>(Eigen::aligned_allocator<Data>(), this,
+                                    data);
+}
+
+template <typename Scalar>
+template <typename NewScalar>
+ResidualModelFramePlacementTpl<NewScalar>
+ResidualModelFramePlacementTpl<Scalar>::cast() const {
+  typedef ResidualModelFramePlacementTpl<NewScalar> ReturnType;
+  typedef StateMultibodyTpl<NewScalar> StateType;
+  ReturnType ret(
+      std::static_pointer_cast<StateType>(state_->template cast<NewScalar>()),
+      id_, pref_.template cast<NewScalar>(), nu_);
+  return ret;
 }
 
 template <typename Scalar>

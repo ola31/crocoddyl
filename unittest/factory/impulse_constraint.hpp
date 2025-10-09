@@ -38,7 +38,7 @@ struct ImpulseConstraintModelTypes {
   static const std::vector<Type> all;
 };
 
-std::ostream &operator<<(std::ostream &os,
+std::ostream& operator<<(std::ostream& os,
                          ImpulseConstraintModelTypes::Type type);
 
 class ImpulseConstraintModelFactory {
@@ -50,7 +50,7 @@ class ImpulseConstraintModelFactory {
   explicit ImpulseConstraintModelFactory();
   ~ImpulseConstraintModelFactory();
 
-  boost::shared_ptr<crocoddyl::ActionModelAbstract> create(
+  std::shared_ptr<crocoddyl::ActionModelAbstract> create(
       ImpulseConstraintModelTypes::Type constraint_type,
       PinocchioModelTypes::Type model_type) const;
 };

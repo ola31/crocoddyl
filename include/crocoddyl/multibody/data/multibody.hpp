@@ -9,8 +9,6 @@
 #ifndef CROCODDYL_CORE_DATA_MULTIBODY_HPP_
 #define CROCODDYL_CORE_DATA_MULTIBODY_HPP_
 
-#include <pinocchio/multibody/data.hpp>
-
 #include "crocoddyl/core/data-collector-base.hpp"
 #include "crocoddyl/core/data/actuation.hpp"
 #include "crocoddyl/core/data/joint.hpp"
@@ -36,7 +34,7 @@ struct DataCollectorActMultibodyTpl : DataCollectorMultibodyTpl<Scalar>,
 
   DataCollectorActMultibodyTpl(
       pinocchio::DataTpl<Scalar>* const pinocchio,
-      boost::shared_ptr<ActuationDataAbstractTpl<Scalar> > actuation)
+      std::shared_ptr<ActuationDataAbstractTpl<Scalar> > actuation)
       : DataCollectorMultibodyTpl<Scalar>(pinocchio),
         DataCollectorActuationTpl<Scalar>(actuation) {}
   virtual ~DataCollectorActMultibodyTpl() {}
@@ -49,13 +47,19 @@ struct DataCollectorJointActMultibodyTpl : DataCollectorActMultibodyTpl<Scalar>,
 
   DataCollectorJointActMultibodyTpl(
       pinocchio::DataTpl<Scalar>* const pinocchio,
-      boost::shared_ptr<ActuationDataAbstractTpl<Scalar> > actuation,
-      boost::shared_ptr<JointDataAbstractTpl<Scalar> > joint)
+      std::shared_ptr<ActuationDataAbstractTpl<Scalar> > actuation,
+      std::shared_ptr<JointDataAbstractTpl<Scalar> > joint)
       : DataCollectorActMultibodyTpl<Scalar>(pinocchio, actuation),
         DataCollectorJointTpl<Scalar>(joint) {}
   virtual ~DataCollectorJointActMultibodyTpl() {}
 };
 
 }  // namespace crocoddyl
+
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_STRUCT(crocoddyl::DataCollectorMultibodyTpl)
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_STRUCT(
+    crocoddyl::DataCollectorActMultibodyTpl)
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_STRUCT(
+    crocoddyl::DataCollectorJointActMultibodyTpl)
 
 #endif  // CROCODDYL_CORE_DATA_MULTIBODY_HPP_

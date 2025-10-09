@@ -1,7 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2020-2021, University of Edinburgh, University of Oxford
+// Copyright (C) 2020-2025, University of Edinburgh, University of Oxford,
+//                          Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -9,7 +10,6 @@
 #ifndef CROCODDYL_MULTIBODY_WRENCH_CONE_HPP_
 #define CROCODDYL_MULTIBODY_WRENCH_CONE_HPP_
 
-#include "crocoddyl/core/mathbase.hpp"
 #include "crocoddyl/core/utils/deprecate.hpp"
 #include "crocoddyl/multibody/fwd.hpp"
 
@@ -47,11 +47,6 @@ class WrenchConeTpl {
 
   /**
    * @brief Initialize the wrench cone
-   */
-  explicit WrenchConeTpl();
-
-  /**
-   * @brief Initialize the wrench cone
    *
    * @param[in] R           Rotation matrix that defines the cone orientation
    * w.r.t. the inertial frame
@@ -81,6 +76,11 @@ class WrenchConeTpl {
    * @param[in] cone  Wrench cone
    */
   WrenchConeTpl(const WrenchConeTpl<Scalar>& cone);
+
+  /**
+   * @brief Initialize the wrench cone
+   */
+  explicit WrenchConeTpl();
   ~WrenchConeTpl();
 
   /**
@@ -99,6 +99,17 @@ class WrenchConeTpl {
                          const Scalar min_nforce = Scalar(0.),
                          const Scalar max_nforce =
                              std::numeric_limits<Scalar>::infinity()));
+
+  /**
+   * @brief Cast the wrench cone to a different scalar type.
+   *
+   * It is useful for operations requiring different precision or scalar types.
+   *
+   * @tparam NewScalar The new scalar type to cast to.
+   * @return WrenchConeTpl<NewScalar> A wrench cone with the new scalar type.
+   */
+  template <typename NewScalar>
+  WrenchConeTpl<NewScalar> cast() const;
 
   /**
    * @brief Return the matrix of wrench cone
@@ -225,5 +236,7 @@ class WrenchConeTpl {
 }  // namespace crocoddyl
 
 #include "crocoddyl/multibody/wrench-cone.hxx"
+
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_CLASS(crocoddyl::WrenchConeTpl)
 
 #endif  // CROCODDYL_MULTIBODY_WRENCH_CONE_HPP_

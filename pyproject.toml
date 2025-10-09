@@ -1,10 +1,12 @@
-[tool.isort]
-profile = "black"
-
 [tool.ruff]
-extend-exclude = ["cmake", "examples/notebooks"]
-extend-select = ["RUF", "UP"]
-target-version = "py38"
+extend-exclude = ["*.ipynb", "cmake"]
+
+[tool.ruff.lint]
+extend-ignore = ["RUF012", "UP036"]
+extend-select = ["I", "NPY", "RUF", "UP", "W"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["crocoddyl"]
 
 [tool.tomlsort]
 all = true

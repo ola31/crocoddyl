@@ -1,7 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2021, LAAS-CNRS, University of Edinburgh
+// Copyright (C) 2019-2025, LAAS-CNRS, University of Edinburgh,
+//                          Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -9,11 +10,8 @@
 #ifndef CROCODDYL_CORE_ACTIVATIONS_QUADRATIC_HPP_
 #define CROCODDYL_CORE_ACTIVATIONS_QUADRATIC_HPP_
 
-#include <stdexcept>
-
 #include "crocoddyl/core/activation-base.hpp"
 #include "crocoddyl/core/fwd.hpp"
-#include "crocoddyl/core/utils/exception.hpp"
 
 namespace crocoddyl {
 
@@ -21,6 +19,7 @@ template <typename _Scalar>
 class ActivationModelQuadTpl : public ActivationModelAbstractTpl<_Scalar> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  CROCODDYL_DERIVED_CAST(ActivationModelBase, ActivationModelQuadTpl)
 
   typedef _Scalar Scalar;
   typedef MathBaseTpl<Scalar> MathBase;
@@ -29,25 +28,25 @@ class ActivationModelQuadTpl : public ActivationModelAbstractTpl<_Scalar> {
   typedef typename MathBase::VectorXs VectorXs;
   typedef typename MathBase::MatrixXs MatrixXs;
 
-  explicit ActivationModelQuadTpl(const std::size_t nr) : Base(nr){};
-  virtual ~ActivationModelQuadTpl(){};
+  explicit ActivationModelQuadTpl(const std::size_t nr) : Base(nr) {};
+  virtual ~ActivationModelQuadTpl() = default;
 
-  virtual void calc(const boost::shared_ptr<ActivationDataAbstract>& data,
-                    const Eigen::Ref<const VectorXs>& r) {
+  virtual void calc(const std::shared_ptr<ActivationDataAbstract>& data,
+                    const Eigen::Ref<const VectorXs>& r) override {
     if (static_cast<std::size_t>(r.size()) != nr_) {
-      throw_pretty("Invalid argument: "
-                   << "r has wrong dimension (it should be " +
-                          std::to_string(nr_) + ")");
+      throw_pretty(
+          "Invalid argument: " << "r has wrong dimension (it should be " +
+                                      std::to_string(nr_) + ")");
     }
-    data->a_value = (Scalar(0.5) * r.transpose() * r)[0];
+    data->a_value = Scalar(0.5) * r.dot(r);
   };
 
-  virtual void calcDiff(const boost::shared_ptr<ActivationDataAbstract>& data,
-                        const Eigen::Ref<const VectorXs>& r) {
+  virtual void calcDiff(const std::shared_ptr<ActivationDataAbstract>& data,
+                        const Eigen::Ref<const VectorXs>& r) override {
     if (static_cast<std::size_t>(r.size()) != nr_) {
-      throw_pretty("Invalid argument: "
-                   << "r has wrong dimension (it should be " +
-                          std::to_string(nr_) + ")");
+      throw_pretty(
+          "Invalid argument: " << "r has wrong dimension (it should be " +
+                                      std::to_string(nr_) + ")");
     }
 
     data->Ar = r;
@@ -56,20 +55,27 @@ class ActivationModelQuadTpl : public ActivationModelAbstractTpl<_Scalar> {
                   "Arr has wrong value");
   };
 
-  virtual boost::shared_ptr<ActivationDataAbstract> createData() {
-    boost::shared_ptr<ActivationDataAbstract> data =
-        boost::allocate_shared<ActivationDataAbstract>(
+  virtual std::shared_ptr<ActivationDataAbstract> createData() override {
+    std::shared_ptr<ActivationDataAbstract> data =
+        std::allocate_shared<ActivationDataAbstract>(
             Eigen::aligned_allocator<ActivationDataAbstract>(), this);
     data->Arr.diagonal().setOnes();
     return data;
   };
+
+  template <typename NewScalar>
+  ActivationModelQuadTpl<NewScalar> cast() const {
+    typedef ActivationModelQuadTpl<NewScalar> ReturnType;
+    ReturnType res(nr_);
+    return res;
+  }
 
   /**
    * @brief Print relevant information of the quadratic model
    *
    * @param[out] os  Output stream object
    */
-  virtual void print(std::ostream& os) const {
+  virtual void print(std::ostream& os) const override {
     os << "ActivationModelQuad {nr=" << nr_ << "}";
   }
 
@@ -78,5 +84,7 @@ class ActivationModelQuadTpl : public ActivationModelAbstractTpl<_Scalar> {
 };
 
 }  // namespace crocoddyl
+
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_CLASS(crocoddyl::ActivationModelQuadTpl)
 
 #endif  // CROCODDYL_CORE_ACTIVATIONS_QUADRATIC_HPP_

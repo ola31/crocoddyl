@@ -1,27 +1,22 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2021-2022, Heriot-Watt University, University of Edinburgh
+// Copyright (C) 2021-2023, Heriot-Watt University, University of Edinburgh
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "crocoddyl/core/solvers/intro.hpp"
 
-#include <iostream>
-
-#include "crocoddyl/core/utils/exception.hpp"
 #include "crocoddyl/core/utils/stop-watch.hpp"
 
 namespace crocoddyl {
 
-SolverIntro::SolverIntro(boost::shared_ptr<ShootingProblem> problem)
+SolverIntro::SolverIntro(std::shared_ptr<ShootingProblem> problem)
     : SolverFDDP(problem),
       eq_solver_(LuNull),
       th_feas_(1e-4),
       rho_(0.3),
-      dPhi_(0.),
-      hfeas_try_(0.),
       upsilon_(0.),
       zero_upsilon_(false) {
   const std::size_t T = problem_->get_T();
@@ -44,10 +39,10 @@ SolverIntro::SolverIntro(boost::shared_ptr<ShootingProblem> problem)
   Hy_lu_.resize(T);
 
   const std::size_t ndx = problem_->get_ndx();
-  const std::vector<boost::shared_ptr<ActionModelAbstract> >& models =
+  const std::vector<std::shared_ptr<ActionModelAbstract> >& models =
       problem_->get_runningModels();
   for (std::size_t t = 0; t < T; ++t) {
-    const boost::shared_ptr<ActionModelAbstract>& model = models[t];
+    const std::shared_ptr<ActionModelAbstract>& model = models[t];
     const std::size_t nu = model->get_nu();
     const std::size_t nh = model->get_nh();
     Hu_rank_[t] = nh;
@@ -85,11 +80,11 @@ bool SolverIntro::solve(const std::vector<Eigen::VectorXd>& init_xs,
   setCandidate(init_xs, init_us, is_feasible);
 
   if (std::isnan(init_reg)) {
-    xreg_ = reg_min_;
-    ureg_ = reg_min_;
+    preg_ = reg_min_;
+    dreg_ = reg_min_;
   } else {
-    xreg_ = init_reg;
-    ureg_ = init_reg;
+    preg_ = init_reg;
+    dreg_ = init_reg;
   }
   was_feasible_ = false;
   if (zero_upsilon_) {
@@ -104,7 +99,7 @@ bool SolverIntro::solve(const std::vector<Eigen::VectorXd>& init_xs,
       } catch (std::exception& e) {
         recalcDiff = false;
         increaseRegularization();
-        if (xreg_ == reg_max_) {
+        if (preg_ == reg_max_) {
           return false;
         } else {
           continue;
@@ -130,19 +125,21 @@ bool SolverIntro::solve(const std::vector<Eigen::VectorXd>& init_xs,
       steplength_ = *it;
       try {
         dV_ = tryStep(steplength_);
-        dPhi_ = dV_ + upsilon_ * (hfeas_ - hfeas_try_);
+        dfeas_ = hfeas_ - hfeas_try_;
+        dPhi_ = dV_ + upsilon_ * dfeas_;
       } catch (std::exception& e) {
         continue;
       }
       expectedImprovement();
       dVexp_ = steplength_ * (d_[0] + 0.5 * steplength_ * d_[1]);
-      dPhiexp_ = dVexp_ + steplength_ * upsilon_ * (hfeas_ - hfeas_try_);
+      dPhiexp_ = dVexp_ + steplength_ * upsilon_ * dfeas_;
       if (dPhiexp_ >= 0) {  // descend direction
         if (std::abs(d_[0]) < th_grad_ || dPhi_ > th_acceptstep_ * dPhiexp_) {
           was_feasible_ = is_feasible_;
           setCandidate(xs_try_, us_try_, (was_feasible_) || (steplength_ == 1));
           cost_ = cost_try_;
           hfeas_ = hfeas_try_;
+          merit_ = cost_ + upsilon_ * hfeas_;
           recalcDiff = true;
           break;
         }
@@ -153,6 +150,7 @@ bool SolverIntro::solve(const std::vector<Eigen::VectorXd>& init_xs,
           setCandidate(xs_try_, us_try_, (was_feasible_) || (steplength_ == 1));
           cost_ = cost_try_;
           hfeas_ = hfeas_try_;
+          merit_ = cost_ + upsilon_ * hfeas_;
           recalcDiff = true;
           break;
         }
@@ -170,7 +168,7 @@ bool SolverIntro::solve(const std::vector<Eigen::VectorXd>& init_xs,
       decreaseRegularization();
     }
     if (steplength_ <= th_stepinc_ || std::abs(d_[1]) <= th_feas_) {
-      if (xreg_ == reg_max_) {
+      if (preg_ == reg_max_) {
         STOP_PROFILER("SolverIntro::solve");
         return false;
       }
@@ -203,10 +201,10 @@ void SolverIntro::resizeData() {
 
   const std::size_t T = problem_->get_T();
   const std::size_t ndx = problem_->get_ndx();
-  const std::vector<boost::shared_ptr<ActionModelAbstract> >& models =
+  const std::vector<std::shared_ptr<ActionModelAbstract> >& models =
       problem_->get_runningModels();
   for (std::size_t t = 0; t < T; ++t) {
-    const boost::shared_ptr<ActionModelAbstract>& model = models[t];
+    const std::shared_ptr<ActionModelAbstract>& model = models[t];
     const std::size_t nu = model->get_nu();
     const std::size_t nh = model->get_nh();
     KQuu_tmp_[t].conservativeResize(ndx, nu);
@@ -229,9 +227,9 @@ double SolverIntro::calcDiff() {
   START_PROFILER("SolverIntro::calcDiff");
   SolverFDDP::calcDiff();
   const std::size_t T = problem_->get_T();
-  const std::vector<boost::shared_ptr<ActionModelAbstract> >& models =
+  const std::vector<std::shared_ptr<ActionModelAbstract> >& models =
       problem_->get_runningModels();
-  const std::vector<boost::shared_ptr<ActionDataAbstract> >& datas =
+  const std::vector<std::shared_ptr<ActionDataAbstract> >& datas =
       problem_->get_runningDatas();
   switch (eq_solver_) {
     case LuNull:
@@ -239,13 +237,15 @@ double SolverIntro::calcDiff() {
 #pragma omp parallel for num_threads(problem_->get_nthreads())
 #endif
       for (std::size_t t = 0; t < T; ++t) {
-        const boost::shared_ptr<crocoddyl::ActionModelAbstract>& model =
+        const std::shared_ptr<crocoddyl::ActionModelAbstract>& model =
             models[t];
-        const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data = datas[t];
+        const std::shared_ptr<crocoddyl::ActionDataAbstract>& data = datas[t];
         if (model->get_nu() > 0 && model->get_nh() > 0) {
           Hu_lu_[t].compute(data->Hu);
-          YZ_[t] << Hu_lu_[t].matrixLU().transpose(), Hu_lu_[t].kernel();
           Hu_rank_[t] = Hu_lu_[t].rank();
+          YZ_[t].leftCols(Hu_rank_[t]).noalias() =
+              (Hu_lu_[t].permutationP() * data->Hu).transpose();
+          YZ_[t].rightCols(model->get_nu() - Hu_rank_[t]) = Hu_lu_[t].kernel();
           const Eigen::Block<Eigen::MatrixXd, Eigen::Dynamic, Eigen::Dynamic,
                              Eigen::RowMajor>
               Y = YZ_[t].leftCols(Hu_lu_[t].rank());
@@ -265,9 +265,9 @@ double SolverIntro::calcDiff() {
 #pragma omp parallel for num_threads(problem_->get_nthreads())
 #endif
       for (std::size_t t = 0; t < T; ++t) {
-        const boost::shared_ptr<crocoddyl::ActionModelAbstract>& model =
+        const std::shared_ptr<crocoddyl::ActionModelAbstract>& model =
             models[t];
-        const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data = datas[t];
+        const std::shared_ptr<crocoddyl::ActionDataAbstract>& data = datas[t];
         if (model->get_nu() > 0 && model->get_nh() > 0) {
           Hu_qr_[t].compute(data->Hu.transpose());
           YZ_[t] = Hu_qr_[t].householderQ();
@@ -295,7 +295,7 @@ double SolverIntro::calcDiff() {
 }
 
 void SolverIntro::computeValueFunction(
-    const std::size_t t, const boost::shared_ptr<ActionModelAbstract>& model) {
+    const std::size_t t, const std::shared_ptr<ActionModelAbstract>& model) {
   const std::size_t nu = model->get_nu();
   Vx_[t] = Qx_[t];
   Vxx_[t] = Qxx_[t];
@@ -316,8 +316,8 @@ void SolverIntro::computeValueFunction(
   Vxx_tmp_ = 0.5 * (Vxx_[t] + Vxx_[t].transpose());
   Vxx_[t] = Vxx_tmp_;
 
-  if (!std::isnan(xreg_)) {
-    Vxx_[t].diagonal().array() += xreg_;
+  if (!std::isnan(preg_)) {
+    Vxx_[t].diagonal().array() += preg_;
   }
 
   // Compute and store the Vx gradient at end of the interval (rollout state)
@@ -328,9 +328,9 @@ void SolverIntro::computeValueFunction(
 
 void SolverIntro::computeGains(const std::size_t t) {
   START_PROFILER("SolverIntro::computeGains");
-  const boost::shared_ptr<crocoddyl::ActionModelAbstract>& model =
+  const std::shared_ptr<crocoddyl::ActionModelAbstract>& model =
       problem_->get_runningModels()[t];
-  const boost::shared_ptr<crocoddyl::ActionDataAbstract>& data =
+  const std::shared_ptr<crocoddyl::ActionDataAbstract>& data =
       problem_->get_runningDatas()[t];
 
   const std::size_t nu = model->get_nu();
@@ -406,10 +406,6 @@ double SolverIntro::get_th_feas() const { return th_feas_; }
 
 double SolverIntro::get_rho() const { return rho_; }
 
-double SolverIntro::get_dPhi() const { return dPhi_; }
-
-double SolverIntro::get_dPhiexp() const { return dPhiexp_; }
-
 double SolverIntro::get_upsilon() const { return upsilon_; }
 
 bool SolverIntro::get_zero_upsilon() const { return zero_upsilon_; }
@@ -452,8 +448,7 @@ void SolverIntro::set_th_feas(const double th_feas) { th_feas_ = th_feas; }
 
 void SolverIntro::set_rho(const double rho) {
   if (0. >= rho || rho > 1.) {
-    throw_pretty("Invalid argument: "
-                 << "rho value should between 0 and 1.");
+    throw_pretty("Invalid argument: " << "rho value should between 0 and 1.");
   }
   rho_ = rho;
 }
