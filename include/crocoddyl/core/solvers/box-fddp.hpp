@@ -9,9 +9,6 @@
 #ifndef CROCODDYL_CORE_SOLVERS_BOX_FDDP_HPP_
 #define CROCODDYL_CORE_SOLVERS_BOX_FDDP_HPP_
 
-#include <Eigen/Cholesky>
-#include <vector>
-
 #include "crocoddyl/core/solvers/box-qp.hpp"
 #include "crocoddyl/core/solvers/fddp.hpp"
 
@@ -21,7 +18,7 @@ class SolverBoxFDDP : public SolverFDDP {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  explicit SolverBoxFDDP(boost::shared_ptr<ShootingProblem> problem);
+  explicit SolverBoxFDDP(std::shared_ptr<ShootingProblem> problem);
   virtual ~SolverBoxFDDP();
 
   virtual void allocateData();

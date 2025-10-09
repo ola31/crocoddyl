@@ -24,9 +24,9 @@ class ActivationModelSmoothAbsTpl
   typedef ActivationModelSmooth1NormTpl<Scalar> Base;
 
   DEPRECATED("Use ActivationModelSmooth1Norm",
-             explicit ActivationModelSmoothAbsTpl(const std::size_t nr,
-                                                  const Scalar eps = Scalar(1.))
-             : Base(nr, eps){};)
+             explicit ActivationModelSmoothAbsTpl(
+                 const std::size_t nr,
+                 const Scalar eps = Scalar(1.)) : Base(nr, eps){};)
 };
 
 template <typename Scalar>
@@ -39,10 +39,13 @@ struct ActivationDataSmoothAbsTpl
 
   template <typename Activation>
   DEPRECATED("Use ActivationDataSmooth1Norm",
-             explicit ActivationDataSmoothAbsTpl(Activation* const activation)
-             : Base(activation){})
+             explicit ActivationDataSmoothAbsTpl(
+                 Activation* const activation) : Base(activation){})
 };
 
 }  // namespace crocoddyl
+
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_CLASS(crocoddyl::ActivationModelSmoothAbsTpl)
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_STRUCT(crocoddyl::ActivationDataSmoothAbsTpl)
 
 #endif  // CROCODDYL_CORE_ACTIVATIONS_SMOOTH_ABS_HPP_

@@ -22,17 +22,29 @@ target_quat = pinocchio.Quaternion(1.0, 0.0, 0.0, 0.0)
 state = crocoddyl.StateMultibody(robot_model)
 
 d_cog, cf, cm, u_lim, l_lim = 0.1525, 6.6e-5, 1e-6, 5.0, 0.1
-tau_f = np.array(
-    [
-        [0.0, 0.0, 0.0, 0.0],
-        [0.0, 0.0, 0.0, 0.0],
-        [1.0, 1.0, 1.0, 1.0],
-        [0.0, d_cog, 0.0, -d_cog],
-        [-d_cog, 0.0, d_cog, 0.0],
-        [-cm / cf, cm / cf, -cm / cf, cm / cf],
-    ]
-)
-actuation = crocoddyl.ActuationModelMultiCopterBase(state, tau_f)
+ps = [
+    crocoddyl.Thruster(
+        pinocchio.SE3(np.eye(3), np.array([d_cog, 0, 0])),
+        cm / cf,
+        crocoddyl.ThrusterType.CCW,
+    ),
+    crocoddyl.Thruster(
+        pinocchio.SE3(np.eye(3), np.array([0, d_cog, 0])),
+        cm / cf,
+        crocoddyl.ThrusterType.CW,
+    ),
+    crocoddyl.Thruster(
+        pinocchio.SE3(np.eye(3), np.array([-d_cog, 0, 0])),
+        cm / cf,
+        crocoddyl.ThrusterType.CCW,
+    ),
+    crocoddyl.Thruster(
+        pinocchio.SE3(np.eye(3), np.array([0, -d_cog, 0])),
+        cm / cf,
+        crocoddyl.ThrusterType.CW,
+    ),
+]
+actuation = crocoddyl.ActuationModelFloatingBaseThrusters(state, ps)
 
 nu = state.nv
 runningCostModel = crocoddyl.CostModelSum(state, nu)
@@ -78,41 +90,6 @@ problem = crocoddyl.ShootingProblem(
     np.concatenate([hector.q0, np.zeros(state.nv)]), [runningModel] * T, terminalModel
 )
 solver = crocoddyl.SolverIntro(problem)
-
-solver.setCallbacks([crocoddyl.CallbackLogger(), crocoddyl.CallbackVerbose()])
-
-cameraTF = [-0.03, 4.4, 2.3, -0.02, 0.56, 0.83, -0.03]
-if WITHDISPLAY:
-    try:
-        import gepetto
-
-        gepetto.corbaserver.Client()
-        display = crocoddyl.GepettoDisplay(hector, 4, 4, cameraTF, floor=False)
-        hector.viewer.gui.addXYZaxis("world/wp", [1.0, 0.0, 0.0, 1.0], 0.03, 0.5)
-        hector.viewer.gui.applyConfiguration(
-            "world/wp",
-            [
-                *target_pos.tolist(),
-                target_quat[0],
-                target_quat[1],
-                target_quat[2],
-                target_quat[3],
-            ],
-        )
-        if WITHPLOT:
-            solver.setCallbacks(
-                [
-                    crocoddyl.CallbackVerbose(),
-                    crocoddyl.CallbackLogger(),
-                    crocoddyl.CallbackDisplay(display),
-                ]
-            )
-        else:
-            solver.setCallbacks(
-                [crocoddyl.CallbackVerbose(), crocoddyl.CallbackDisplay(display)]
-            )
-    except Exception:
-        display = crocoddyl.MeshcatDisplay(hector)
 if WITHPLOT:
     solver.setCallbacks(
         [
@@ -122,8 +99,6 @@ if WITHPLOT:
     )
 else:
     solver.setCallbacks([crocoddyl.CallbackVerbose()])
-solver.getCallbacks()[0].precision = 3
-solver.getCallbacks()[0].level = crocoddyl.VerboseLevel._2
 
 # Solving the problem with the solver
 solver.solve()
@@ -138,11 +113,30 @@ if WITHPLOT:
         show=False,
     )
     crocoddyl.plotConvergence(
-        log.costs, log.u_regs, log.x_regs, log.stops, log.grads, log.steps, figIndex=2
+        log.costs, log.pregs, log.dregs, log.stops, log.grads, log.steps, figIndex=2
     )
 
 # Display the entire motion
 if WITHDISPLAY:
+    try:
+        import gepetto
+
+        gepetto.corbaserver.Client()
+        cameraTF = [-0.03, 4.4, 2.3, -0.02, 0.56, 0.83, -0.03]
+        display = crocoddyl.GepettoDisplay(hector, 4, 4, cameraTF, floor=False)
+        hector.viewer.gui.addXYZaxis("world/wp", [1.0, 0.0, 0.0, 1.0], 0.03, 0.5)
+        hector.viewer.gui.applyConfiguration(
+            "world/wp",
+            [
+                *target_pos.tolist(),
+                target_quat[0],
+                target_quat[1],
+                target_quat[2],
+                target_quat[3],
+            ],
+        )
+    except Exception:
+        display = crocoddyl.MeshcatDisplay(hector)
     display.rate = -1
     display.freq = 1
     while True:

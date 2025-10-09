@@ -5,9 +5,9 @@ from random import randint
 import example_robot_data
 import numpy as np
 import pinocchio
+from factory import DDPDerived, FDDPDerived
 
 import crocoddyl
-from crocoddyl.utils import DDPDerived, FDDPDerived
 
 
 class SolverAbstractTestCase(unittest.TestCase):
@@ -22,9 +22,10 @@ class SolverAbstractTestCase(unittest.TestCase):
         self.xs = []
         self.us = []
         self.xs.append(state.rand())
+        rng = np.random.default_rng()
         for _ in range(self.T):
             self.xs.append(state.rand())
-            self.us.append(np.random.rand(self.MODEL.nu))
+            self.us.append(rng.random(self.MODEL.nu))
         self.PROBLEM = crocoddyl.ShootingProblem(
             self.xs[0], [self.MODEL] * self.T, self.MODEL
         )

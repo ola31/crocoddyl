@@ -11,9 +11,6 @@
 #ifndef CROCODDYL_CORE_SOLVERS_KKT_HPP_
 #define CROCODDYL_CORE_SOLVERS_KKT_HPP_
 
-#include <Eigen/Cholesky>
-#include <Eigen/Dense>
-
 #include "crocoddyl/core/solver-base.hpp"
 
 namespace crocoddyl {
@@ -22,7 +19,7 @@ class SolverKKT : public SolverAbstract {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  explicit SolverKKT(boost::shared_ptr<ShootingProblem> problem);
+  explicit SolverKKT(std::shared_ptr<ShootingProblem> problem);
   virtual ~SolverKKT();
 
   virtual bool solve(

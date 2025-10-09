@@ -1,7 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2022, LAAS-CNRS, University of Edinburgh, INRIA
+// Copyright (C) 2019-2025, LAAS-CNRS, University of Edinburgh, INRIA
+//                          Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
@@ -10,7 +11,7 @@
 #define CROCODDYL_MULTIBODY_FWD_HPP_
 
 #include "crocoddyl/core/costs/residual.hpp"
-#include "crocoddyl/core/utils/deprecate.hpp"
+#include "crocoddyl/multibody/pch.hpp"
 
 namespace crocoddyl {
 
@@ -22,7 +23,10 @@ template <typename Scalar>
 class ActuationModelFullTpl;
 
 template <typename Scalar>
-class ActuationModelMultiCopterBaseTpl;
+struct ThrusterTpl;
+
+template <typename Scalar>
+class ActuationModelFloatingBaseThrustersTpl;
 
 // force
 template <typename Scala>
@@ -71,31 +75,6 @@ template <typename Scalar>
 class ContactModelNumDiffTpl;
 template <typename Scalar>
 struct ContactDataNumDiffTpl;
-
-// frame
-template <typename Scalar>
-struct FrameTranslationTpl;
-
-template <typename Scalar>
-struct FrameRotationTpl;
-
-template <typename Scalar>
-struct FramePlacementTpl;
-
-template <typename Scalar>
-struct FrameMotionTpl;
-
-template <typename Scalar>
-struct FrameForceTpl;
-
-template <typename Scalar>
-struct FrameFrictionConeTpl;
-
-template <typename Scalar>
-struct FrameWrenchConeTpl;
-
-template <typename Scalar>
-struct FrameCoPSupportTpl;
 
 // residual
 template <typename Scalar>
@@ -269,12 +248,13 @@ class ImpulseModelMultipleTpl;
 template <typename Scalar>
 struct ImpulseDataMultipleTpl;
 
-/*******************************Template
- * Instantiation**************************/
+/**** Template Instantiation ****/
 
 typedef ActuationModelFloatingBaseTpl<double> ActuationModelFloatingBase;
 typedef ActuationModelFullTpl<double> ActuationModelFull;
-typedef ActuationModelMultiCopterBaseTpl<double> ActuationModelMultiCopterBase;
+typedef ThrusterTpl<double> Thruster;
+typedef ActuationModelFloatingBaseThrustersTpl<double>
+    ActuationModelFloatingBaseThrusters;
 
 typedef ForceDataAbstractTpl<double> ForceDataAbstract;
 
@@ -309,22 +289,6 @@ typedef ContactDataNumDiffTpl<double> ContactDataNumDiff;
 typedef FrictionConeTpl<double> FrictionCone;
 typedef WrenchConeTpl<double> WrenchCone;
 typedef CoPSupportTpl<double> CoPSupport;
-
-DEPRECATED("Do not use FrameTranslation",
-           typedef FrameTranslationTpl<double> FrameTranslation;)
-DEPRECATED("Do not use FrameTranslation",
-           typedef FrameRotationTpl<double> FrameRotation;)
-DEPRECATED("Do not use FramePlacement",
-           typedef FramePlacementTpl<double> FramePlacement;)
-DEPRECATED("Do not use FrameMotion",
-           typedef FrameMotionTpl<double> FrameMotion;)
-DEPRECATED("Do not use FrameForce", typedef FrameForceTpl<double> FrameForce;)
-DEPRECATED("Do not use FrameFrictionCone",
-           typedef FrameFrictionConeTpl<double> FrameFrictionCone;)
-DEPRECATED("Do not use FrameWrenchCone",
-           typedef FrameWrenchConeTpl<double> FrameWrenchCone;)
-DEPRECATED("Do not use FrameCopSupport",
-           typedef FrameCoPSupportTpl<double> FrameCoPSupport;)
 
 typedef ResidualModelCentroidalMomentumTpl<double>
     ResidualModelCentroidalMomentum;

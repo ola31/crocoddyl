@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2023, LAAS-CNRS, University of Edinburgh,
+// Copyright (C) 2019-2025, LAAS-CNRS, University of Edinburgh,
 //                          Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
@@ -10,9 +10,6 @@
 #ifndef CROCODDYL_MULTIBODY_CONTACT_BASE_HPP_
 #define CROCODDYL_MULTIBODY_CONTACT_BASE_HPP_
 
-#include <pinocchio/multibody/fwd.hpp>
-
-#include "crocoddyl/core/mathbase.hpp"
 #include "crocoddyl/core/utils/deprecate.hpp"
 #include "crocoddyl/multibody/force-base.hpp"
 #include "crocoddyl/multibody/fwd.hpp"
@@ -20,8 +17,15 @@
 
 namespace crocoddyl {
 
+class ContactModelBase {
+ public:
+  virtual ~ContactModelBase() = default;
+
+  CROCODDYL_BASE_CAST(ContactModelBase, ContactModelAbstractTpl)
+};
+
 template <typename _Scalar>
-class ContactModelAbstractTpl {
+class ContactModelAbstractTpl : public ContactModelBase {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -40,24 +44,24 @@ class ContactModelAbstractTpl {
    * @param[in] nc     Dimension of the contact model
    * @param[in] nu     Dimension of the control vector
    */
-  ContactModelAbstractTpl(boost::shared_ptr<StateMultibody> state,
+  ContactModelAbstractTpl(std::shared_ptr<StateMultibody> state,
                           const pinocchio::ReferenceFrame type,
                           const std::size_t nc, const std::size_t nu);
-  ContactModelAbstractTpl(boost::shared_ptr<StateMultibody> state,
+  ContactModelAbstractTpl(std::shared_ptr<StateMultibody> state,
                           const pinocchio::ReferenceFrame type,
                           const std::size_t nc);
 
   DEPRECATED(
       "Use constructor that passes the type type of contact, this assumes is "
       "pinocchio::LOCAL",
-      ContactModelAbstractTpl(boost::shared_ptr<StateMultibody> state,
+      ContactModelAbstractTpl(std::shared_ptr<StateMultibody> state,
                               const std::size_t nc, const std::size_t nu);)
   DEPRECATED(
       "Use constructor that passes the type type of contact, this assumes is "
       "pinocchio::LOCAL",
-      ContactModelAbstractTpl(boost::shared_ptr<StateMultibody> state,
+      ContactModelAbstractTpl(std::shared_ptr<StateMultibody> state,
                               const std::size_t nc);)
-  virtual ~ContactModelAbstractTpl();
+  virtual ~ContactModelAbstractTpl() = default;
 
   /**
    * @brief Compute the contact Jacobian and acceleration drift
@@ -66,7 +70,7 @@ class ContactModelAbstractTpl {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calc(const boost::shared_ptr<ContactDataAbstract>& data,
+  virtual void calc(const std::shared_ptr<ContactDataAbstract>& data,
                     const Eigen::Ref<const VectorXs>& x) = 0;
 
   /**
@@ -76,7 +80,7 @@ class ContactModelAbstractTpl {
    * @param[in] x     State point \f$\mathbf{x}\in\mathbb{R}^{ndx}\f$
    * @param[in] u     Control input \f$\mathbf{u}\in\mathbb{R}^{nu}\f$
    */
-  virtual void calcDiff(const boost::shared_ptr<ContactDataAbstract>& data,
+  virtual void calcDiff(const std::shared_ptr<ContactDataAbstract>& data,
                         const Eigen::Ref<const VectorXs>& x) = 0;
 
   /**
@@ -85,7 +89,7 @@ class ContactModelAbstractTpl {
    * @param[in] data   Contact data
    * @param[in] force  Contact force
    */
-  virtual void updateForce(const boost::shared_ptr<ContactDataAbstract>& data,
+  virtual void updateForce(const std::shared_ptr<ContactDataAbstract>& data,
                            const VectorXs& force) = 0;
 
   /**
@@ -94,7 +98,7 @@ class ContactModelAbstractTpl {
    * @param[in] data   Contact data
    * @param[in] force  Contact force
    */
-  void updateForceDiff(const boost::shared_ptr<ContactDataAbstract>& data,
+  void updateForceDiff(const std::shared_ptr<ContactDataAbstract>& data,
                        const MatrixXs& df_dx, const MatrixXs& df_du) const;
 
   /**
@@ -102,26 +106,25 @@ class ContactModelAbstractTpl {
    *
    * @param[in] data  Contact data
    */
-  void setZeroForce(const boost::shared_ptr<ContactDataAbstract>& data) const;
+  void setZeroForce(const std::shared_ptr<ContactDataAbstract>& data) const;
 
   /**
    * @brief Set the stack of spatial forces Jacobians to zero
    *
    * @param[in] data  Contact data
    */
-  void setZeroForceDiff(
-      const boost::shared_ptr<ContactDataAbstract>& data) const;
+  void setZeroForceDiff(const std::shared_ptr<ContactDataAbstract>& data) const;
 
   /**
    * @brief Create the contact data
    */
-  virtual boost::shared_ptr<ContactDataAbstract> createData(
+  virtual std::shared_ptr<ContactDataAbstract> createData(
       pinocchio::DataTpl<Scalar>* const data);
 
   /**
    * @brief Return the state
    */
-  const boost::shared_ptr<StateMultibody>& get_state() const;
+  const std::shared_ptr<StateMultibody>& get_state() const;
 
   /**
    * @brief Return the dimension of the contact
@@ -168,11 +171,12 @@ class ContactModelAbstractTpl {
   virtual void print(std::ostream& os) const;
 
  protected:
-  boost::shared_ptr<StateMultibody> state_;
+  std::shared_ptr<StateMultibody> state_;
   std::size_t nc_;
   std::size_t nu_;
   pinocchio::FrameIndex id_;        //!< Reference frame id of the contact
   pinocchio::ReferenceFrame type_;  //!< Type of contact
+  ContactModelAbstractTpl() : state_(nullptr), nc_(0), nu_(0), id_(0) {};
 };
 
 template <typename _Scalar>
@@ -198,7 +202,7 @@ struct ContactDataAbstractTpl : public ForceDataAbstractTpl<_Scalar> {
     da0_dx.setZero();
     dtau_dq.setZero();
   }
-  virtual ~ContactDataAbstractTpl() {}
+  virtual ~ContactDataAbstractTpl() = default;
 
   using Base::df_du;
   using Base::df_dx;
@@ -220,5 +224,8 @@ struct ContactDataAbstractTpl : public ForceDataAbstractTpl<_Scalar> {
 /* --- Details -------------------------------------------------------------- */
 /* --- Details -------------------------------------------------------------- */
 #include "crocoddyl/multibody/contact-base.hxx"
+
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_CLASS(crocoddyl::ContactModelAbstractTpl)
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_STRUCT(crocoddyl::ContactDataAbstractTpl)
 
 #endif  // CROCODDYL_MULTIBODY_CONTACT_BASE_HPP_

@@ -1,25 +1,21 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2022, LAAS-CNRS, University of Edinburgh,
+// Copyright (C) 2019-2025, LAAS-CNRS, University of Edinburgh,
 //                          Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
-#include "crocoddyl/core/utils/exception.hpp"
-
 namespace crocoddyl {
 
 template <typename Scalar>
-CostModelSumTpl<Scalar>::CostModelSumTpl(boost::shared_ptr<StateAbstract> state,
+CostModelSumTpl<Scalar>::CostModelSumTpl(std::shared_ptr<StateAbstract> state,
                                          const std::size_t nu)
     : state_(state), nu_(nu), nr_(0), nr_total_(0) {}
 
 template <typename Scalar>
-CostModelSumTpl<Scalar>::CostModelSumTpl(boost::shared_ptr<StateAbstract> state)
+CostModelSumTpl<Scalar>::CostModelSumTpl(std::shared_ptr<StateAbstract> state)
     : state_(state), nu_(state->get_nv()), nr_(0), nr_total_(0) {}
 
 template <typename Scalar>
@@ -27,7 +23,7 @@ CostModelSumTpl<Scalar>::~CostModelSumTpl() {}
 
 template <typename Scalar>
 void CostModelSumTpl<Scalar>::addCost(const std::string& name,
-                                      boost::shared_ptr<CostModelAbstract> cost,
+                                      std::shared_ptr<CostModelAbstract> cost,
                                       const Scalar weight, const bool active) {
   if (cost->get_nu() != nu_) {
     throw_pretty(
@@ -37,7 +33,7 @@ void CostModelSumTpl<Scalar>::addCost(const std::string& name,
   }
   std::pair<typename CostModelContainer::iterator, bool> ret =
       costs_.insert(std::make_pair(
-          name, boost::make_shared<CostItem>(name, cost, weight, active)));
+          name, std::make_shared<CostItem>(name, cost, weight, active)));
   if (ret.second == false) {
     std::cerr << "Warning: we couldn't add the " << name
               << " cost item, it already existed." << std::endl;
@@ -48,6 +44,26 @@ void CostModelSumTpl<Scalar>::addCost(const std::string& name,
   } else if (!active) {
     nr_total_ += cost->get_activation()->get_nr();
     inactive_set_.insert(name);
+  }
+}
+
+template <typename Scalar>
+void CostModelSumTpl<Scalar>::addCost(
+    const std::shared_ptr<CostItem>& cost_item) {
+  if (cost_item->cost->get_nu() != nu_) {
+    throw_pretty(
+        cost_item->name
+        << " cost item doesn't have the same control dimension (it should be " +
+               std::to_string(nu_) + ")");
+  }
+  costs_.insert(std::make_pair(cost_item->name, cost_item));
+  if (cost_item->active) {
+    nr_ += cost_item->cost->get_activation()->get_nr();
+    nr_total_ += cost_item->cost->get_activation()->get_nr();
+    active_set_.insert(cost_item->name);
+  } else {
+    nr_total_ += cost_item->cost->get_activation()->get_nr();
+    inactive_set_.insert(cost_item->name);
   }
 }
 
@@ -89,33 +105,33 @@ void CostModelSumTpl<Scalar>::changeCostStatus(const std::string& name,
 }
 
 template <typename Scalar>
-void CostModelSumTpl<Scalar>::calc(const boost::shared_ptr<CostDataSum>& data,
+void CostModelSumTpl<Scalar>::calc(const std::shared_ptr<CostDataSum>& data,
                                    const Eigen::Ref<const VectorXs>& x,
                                    const Eigen::Ref<const VectorXs>& u) {
   if (static_cast<std::size_t>(x.size()) != state_->get_nx()) {
-    throw_pretty("Invalid argument: "
-                 << "x has wrong dimension (it should be " +
-                        std::to_string(state_->get_nx()) + ")");
+    throw_pretty(
+        "Invalid argument: " << "x has wrong dimension (it should be " +
+                                    std::to_string(state_->get_nx()) + ")");
   }
   if (static_cast<std::size_t>(u.size()) != nu_) {
-    throw_pretty("Invalid argument: "
-                 << "u has wrong dimension (it should be " +
-                        std::to_string(nu_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "u has wrong dimension (it should be " +
+                                    std::to_string(nu_) + ")");
   }
   if (data->costs.size() != costs_.size()) {
     throw_pretty("Invalid argument: "
                  << "it doesn't match the number of cost datas and models");
   }
-  data->cost = 0.;
+  data->cost = Scalar(0.);
 
   typename CostModelContainer::iterator it_m, end_m;
   typename CostDataContainer::iterator it_d, end_d;
   for (it_m = costs_.begin(), end_m = costs_.end(), it_d = data->costs.begin(),
       end_d = data->costs.end();
        it_m != end_m || it_d != end_d; ++it_m, ++it_d) {
-    const boost::shared_ptr<CostItem>& m_i = it_m->second;
+    const std::shared_ptr<CostItem>& m_i = it_m->second;
     if (m_i->active) {
-      const boost::shared_ptr<CostDataAbstract>& d_i = it_d->second;
+      const std::shared_ptr<CostDataAbstract>& d_i = it_d->second;
       assert_pretty(it_m->first == it_d->first,
                     "it doesn't match the cost name between model and data ("
                         << it_m->first << " != " << it_d->first << ")");
@@ -127,27 +143,27 @@ void CostModelSumTpl<Scalar>::calc(const boost::shared_ptr<CostDataSum>& data,
 }
 
 template <typename Scalar>
-void CostModelSumTpl<Scalar>::calc(const boost::shared_ptr<CostDataSum>& data,
+void CostModelSumTpl<Scalar>::calc(const std::shared_ptr<CostDataSum>& data,
                                    const Eigen::Ref<const VectorXs>& x) {
   if (static_cast<std::size_t>(x.size()) != state_->get_nx()) {
-    throw_pretty("Invalid argument: "
-                 << "x has wrong dimension (it should be " +
-                        std::to_string(state_->get_nx()) + ")");
+    throw_pretty(
+        "Invalid argument: " << "x has wrong dimension (it should be " +
+                                    std::to_string(state_->get_nx()) + ")");
   }
   if (data->costs.size() != costs_.size()) {
     throw_pretty("Invalid argument: "
                  << "it doesn't match the number of cost datas and models");
   }
-  data->cost = 0.;
+  data->cost = Scalar(0.);
 
   typename CostModelContainer::iterator it_m, end_m;
   typename CostDataContainer::iterator it_d, end_d;
   for (it_m = costs_.begin(), end_m = costs_.end(), it_d = data->costs.begin(),
       end_d = data->costs.end();
        it_m != end_m || it_d != end_d; ++it_m, ++it_d) {
-    const boost::shared_ptr<CostItem>& m_i = it_m->second;
+    const std::shared_ptr<CostItem>& m_i = it_m->second;
     if (m_i->active) {
-      const boost::shared_ptr<CostDataAbstract>& d_i = it_d->second;
+      const std::shared_ptr<CostDataAbstract>& d_i = it_d->second;
       assert_pretty(it_m->first == it_d->first,
                     "it doesn't match the cost name between model and data ("
                         << it_m->first << " != " << it_d->first << ")");
@@ -159,18 +175,18 @@ void CostModelSumTpl<Scalar>::calc(const boost::shared_ptr<CostDataSum>& data,
 }
 
 template <typename Scalar>
-void CostModelSumTpl<Scalar>::calcDiff(
-    const boost::shared_ptr<CostDataSum>& data,
-    const Eigen::Ref<const VectorXs>& x, const Eigen::Ref<const VectorXs>& u) {
+void CostModelSumTpl<Scalar>::calcDiff(const std::shared_ptr<CostDataSum>& data,
+                                       const Eigen::Ref<const VectorXs>& x,
+                                       const Eigen::Ref<const VectorXs>& u) {
   if (static_cast<std::size_t>(x.size()) != state_->get_nx()) {
-    throw_pretty("Invalid argument: "
-                 << "x has wrong dimension (it should be " +
-                        std::to_string(state_->get_nx()) + ")");
+    throw_pretty(
+        "Invalid argument: " << "x has wrong dimension (it should be " +
+                                    std::to_string(state_->get_nx()) + ")");
   }
   if (static_cast<std::size_t>(u.size()) != nu_) {
-    throw_pretty("Invalid argument: "
-                 << "u has wrong dimension (it should be " +
-                        std::to_string(nu_) + ")");
+    throw_pretty(
+        "Invalid argument: " << "u has wrong dimension (it should be " +
+                                    std::to_string(nu_) + ")");
   }
   if (data->costs.size() != costs_.size()) {
     throw_pretty("Invalid argument: "
@@ -187,9 +203,9 @@ void CostModelSumTpl<Scalar>::calcDiff(
   for (it_m = costs_.begin(), end_m = costs_.end(), it_d = data->costs.begin(),
       end_d = data->costs.end();
        it_m != end_m || it_d != end_d; ++it_m, ++it_d) {
-    const boost::shared_ptr<CostItem>& m_i = it_m->second;
+    const std::shared_ptr<CostItem>& m_i = it_m->second;
     if (m_i->active) {
-      const boost::shared_ptr<CostDataAbstract>& d_i = it_d->second;
+      const std::shared_ptr<CostDataAbstract>& d_i = it_d->second;
       assert_pretty(it_m->first == it_d->first,
                     "it doesn't match the cost name between model and data ("
                         << it_m->first << " != " << it_d->first << ")");
@@ -205,13 +221,12 @@ void CostModelSumTpl<Scalar>::calcDiff(
 }
 
 template <typename Scalar>
-void CostModelSumTpl<Scalar>::calcDiff(
-    const boost::shared_ptr<CostDataSum>& data,
-    const Eigen::Ref<const VectorXs>& x) {
+void CostModelSumTpl<Scalar>::calcDiff(const std::shared_ptr<CostDataSum>& data,
+                                       const Eigen::Ref<const VectorXs>& x) {
   if (static_cast<std::size_t>(x.size()) != state_->get_nx()) {
-    throw_pretty("Invalid argument: "
-                 << "x has wrong dimension (it should be " +
-                        std::to_string(state_->get_nx()) + ")");
+    throw_pretty(
+        "Invalid argument: " << "x has wrong dimension (it should be " +
+                                    std::to_string(state_->get_nx()) + ")");
   }
   if (data->costs.size() != costs_.size()) {
     throw_pretty("Invalid argument: "
@@ -225,9 +240,9 @@ void CostModelSumTpl<Scalar>::calcDiff(
   for (it_m = costs_.begin(), end_m = costs_.end(), it_d = data->costs.begin(),
       end_d = data->costs.end();
        it_m != end_m || it_d != end_d; ++it_m, ++it_d) {
-    const boost::shared_ptr<CostItem>& m_i = it_m->second;
+    const std::shared_ptr<CostItem>& m_i = it_m->second;
     if (m_i->active) {
-      const boost::shared_ptr<CostDataAbstract>& d_i = it_d->second;
+      const std::shared_ptr<CostDataAbstract>& d_i = it_d->second;
       assert_pretty(it_m->first == it_d->first,
                     "it doesn't match the cost name between model and data ("
                         << it_m->first << " != " << it_d->first << ")");
@@ -240,14 +255,29 @@ void CostModelSumTpl<Scalar>::calcDiff(
 }
 
 template <typename Scalar>
-boost::shared_ptr<CostDataSumTpl<Scalar> > CostModelSumTpl<Scalar>::createData(
+std::shared_ptr<CostDataSumTpl<Scalar> > CostModelSumTpl<Scalar>::createData(
     DataCollectorAbstract* const data) {
-  return boost::allocate_shared<CostDataSum>(
+  return std::allocate_shared<CostDataSum>(
       Eigen::aligned_allocator<CostDataSum>(), this, data);
 }
 
 template <typename Scalar>
-const boost::shared_ptr<StateAbstractTpl<Scalar> >&
+template <typename NewScalar>
+CostModelSumTpl<NewScalar> CostModelSumTpl<Scalar>::cast() const {
+  typedef CostModelSumTpl<NewScalar> ReturnType;
+  typedef CostItemTpl<NewScalar> CostType;
+  ReturnType ret(state_->template cast<NewScalar>(), nu_);
+  typename CostModelContainer::const_iterator it_m, end_m;
+  for (it_m = costs_.begin(), end_m = costs_.end(); it_m != end_m; ++it_m) {
+    const std::string name = it_m->first;
+    const CostType& m_i = it_m->second->template cast<NewScalar>();
+    ret.addCost(name, m_i.cost, m_i.weight, m_i.active);
+  }
+  return ret;
+}
+
+template <typename Scalar>
+const std::shared_ptr<StateAbstractTpl<Scalar> >&
 CostModelSumTpl<Scalar>::get_state() const {
   return state_;
 }
@@ -304,7 +334,7 @@ std::ostream& operator<<(std::ostream& os,
   os << "  Active:" << std::endl;
   for (std::set<std::string>::const_iterator it = active.begin();
        it != active.end(); ++it) {
-    const boost::shared_ptr<typename CostModelSumTpl<Scalar>::CostItem>&
+    const std::shared_ptr<typename CostModelSumTpl<Scalar>::CostItem>&
         cost_item = model.get_costs().find(*it)->second;
     if (it != --active.end()) {
       os << "    " << *it << ": " << *cost_item << std::endl;
@@ -315,7 +345,7 @@ std::ostream& operator<<(std::ostream& os,
   os << "  Inactive:" << std::endl;
   for (std::set<std::string>::const_iterator it = inactive.begin();
        it != inactive.end(); ++it) {
-    const boost::shared_ptr<typename CostModelSumTpl<Scalar>::CostItem>&
+    const std::shared_ptr<typename CostModelSumTpl<Scalar>::CostItem>&
         cost_item = model.get_costs().find(*it)->second;
     if (it != --inactive.end()) {
       os << "    " << *it << ": " << *cost_item << std::endl;

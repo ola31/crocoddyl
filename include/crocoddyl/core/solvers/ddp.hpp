@@ -10,10 +10,6 @@
 #ifndef CROCODDYL_CORE_SOLVERS_DDP_HPP_
 #define CROCODDYL_CORE_SOLVERS_DDP_HPP_
 
-#include <Eigen/Cholesky>
-#include <vector>
-
-#include "crocoddyl/core/mathbase.hpp"
 #include "crocoddyl/core/solver-base.hpp"
 #include "crocoddyl/core/utils/deprecate.hpp"
 
@@ -64,14 +60,14 @@ class SolverDDP : public SolverAbstract {
    *
    * @param[in] problem  shooting problem
    */
-  explicit SolverDDP(boost::shared_ptr<ShootingProblem> problem);
+  explicit SolverDDP(std::shared_ptr<ShootingProblem> problem);
   virtual ~SolverDDP();
 
   virtual bool solve(
       const std::vector<Eigen::VectorXd>& init_xs = DEFAULT_VECTOR,
       const std::vector<Eigen::VectorXd>& init_us = DEFAULT_VECTOR,
       const std::size_t maxiter = 100, const bool is_feasible = false,
-      const double init_reg = 1e-9);
+      const double init_reg = NAN);
   virtual void computeDirection(const bool recalc = true);
   virtual double tryStep(const double steplength = 1);
   virtual double stoppingCriteria();
@@ -147,8 +143,8 @@ class SolverDDP : public SolverAbstract {
    * @param[in] data   Action data in the given time instance
    */
   virtual void computeActionValueFunction(
-      const std::size_t t, const boost::shared_ptr<ActionModelAbstract>& model,
-      const boost::shared_ptr<ActionDataAbstract>& data);
+      const std::size_t t, const std::shared_ptr<ActionModelAbstract>& model,
+      const std::shared_ptr<ActionDataAbstract>& data);
 
   /**
    * @brief Compute the linear-quadratic approximation of the Value function
@@ -160,7 +156,7 @@ class SolverDDP : public SolverAbstract {
    * @param[in] model  Action model in the given time instance
    */
   virtual void computeValueFunction(
-      const std::size_t t, const boost::shared_ptr<ActionModelAbstract>& model);
+      const std::size_t t, const std::shared_ptr<ActionModelAbstract>& model);
 
   /**
    * @brief Compute the feedforward and feedback terms using a Cholesky

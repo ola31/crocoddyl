@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2023, LAAS-CNRS, University of Edinburgh,
+// Copyright (C) 2019-2025, LAAS-CNRS, University of Edinburgh,
 //                          Heriot-Watt University, University of Trento
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
@@ -20,6 +20,9 @@ void exposeStateAbstract();
 void exposeControlParametrizationAbstract();
 void exposeActuationAbstract();
 void exposeActionAbstract();
+#ifdef CROCODDYL_WITH_CODEGEN
+void exposeActionCodeGen();
+#endif
 void exposeDifferentialActionAbstract();
 void exposeIntegratedActionAbstract();
 void exposeResidualAbstract();
@@ -31,7 +34,6 @@ void exposeDataCollectorActuation();
 void exposeDataCollectorJoint();
 void exposeIntegratedActionEuler();
 void exposeIntegratedActionRK();
-void exposeIntegratedActionRK4();
 void exposeCostAbstract();
 void exposeResidualControl();
 void exposeResidualJointEffort();
@@ -74,6 +76,7 @@ void exposeSolverIntro();
 void exposeSolverIpopt();
 #endif
 void exposeCallbacks();
+void exposeException();
 void exposeStopWatch();
 
 void exposeCore();

@@ -1,16 +1,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BSD 3-Clause License
 //
-// Copyright (C) 2019-2023, LAAS-CNRS, New York University,
-//                          Max Planck Gesellschaft, University of Edinburgh
+// Copyright (C) 2019-2025, LAAS-CNRS, New York University,
+//                          Max Planck Gesellschaft, University of Edinburgh,
+//                          Heriot-Watt University
 // Copyright note valid unless otherwise stated in individual files.
 // All rights reserved.
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef CROCODDYL_CORE_NUMDIFF_ACTION_HPP_
 #define CROCODDYL_CORE_NUMDIFF_ACTION_HPP_
-
-#include <vector>
 
 #include "crocoddyl/core/action-base.hpp"
 #include "crocoddyl/core/fwd.hpp"
@@ -45,6 +44,7 @@ template <typename _Scalar>
 class ActionModelNumDiffTpl : public ActionModelAbstractTpl<_Scalar> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  CROCODDYL_DERIVED_CAST(ActionModelBase, ActionModelNumDiffTpl)
 
   typedef _Scalar Scalar;
   typedef ActionDataAbstractTpl<Scalar> ActionDataAbstract;
@@ -62,56 +62,68 @@ class ActionModelNumDiffTpl : public ActionModelAbstractTpl<_Scalar> {
    * @param[in] with_gauss_approx  True if we want to use the Gauss
    * approximation for computing the Hessians
    */
-  explicit ActionModelNumDiffTpl(boost::shared_ptr<Base> model,
+  explicit ActionModelNumDiffTpl(std::shared_ptr<Base> model,
                                  bool with_gauss_approx = false);
-  virtual ~ActionModelNumDiffTpl();
+  virtual ~ActionModelNumDiffTpl() = default;
 
   /**
    * @brief @copydoc Base::calc()
    */
-  virtual void calc(const boost::shared_ptr<ActionDataAbstract>& data,
+  virtual void calc(const std::shared_ptr<ActionDataAbstract>& data,
                     const Eigen::Ref<const VectorXs>& x,
-                    const Eigen::Ref<const VectorXs>& u);
+                    const Eigen::Ref<const VectorXs>& u) override;
 
   /**
-   * @brief @copydoc Base::calc(const boost::shared_ptr<ActionDataAbstract>&
+   * @brief @copydoc Base::calc(const std::shared_ptr<ActionDataAbstract>&
    * data, const Eigen::Ref<const VectorXs>& x)
    */
-  virtual void calc(const boost::shared_ptr<ActionDataAbstract>& data,
-                    const Eigen::Ref<const VectorXs>& x);
+  virtual void calc(const std::shared_ptr<ActionDataAbstract>& data,
+                    const Eigen::Ref<const VectorXs>& x) override;
 
   /**
    * @brief @copydoc Base::calcDiff()
    */
-  virtual void calcDiff(const boost::shared_ptr<ActionDataAbstract>& data,
+  virtual void calcDiff(const std::shared_ptr<ActionDataAbstract>& data,
                         const Eigen::Ref<const VectorXs>& x,
-                        const Eigen::Ref<const VectorXs>& u);
+                        const Eigen::Ref<const VectorXs>& u) override;
 
   /**
-   * @brief @copydoc Base::calcDiff(const boost::shared_ptr<ActionDataAbstract>&
+   * @brief @copydoc Base::calcDiff(const std::shared_ptr<ActionDataAbstract>&
    * data, const Eigen::Ref<const VectorXs>& x)
    */
-  virtual void calcDiff(const boost::shared_ptr<ActionDataAbstract>& data,
-                        const Eigen::Ref<const VectorXs>& x);
+  virtual void calcDiff(const std::shared_ptr<ActionDataAbstract>& data,
+                        const Eigen::Ref<const VectorXs>& x) override;
 
   /**
    * @brief @copydoc Base::createData()
    */
-  virtual boost::shared_ptr<ActionDataAbstract> createData();
+  virtual std::shared_ptr<ActionDataAbstract> createData() override;
 
   /**
    * @brief @copydoc Base::quasiStatic()
    */
-  virtual void quasiStatic(const boost::shared_ptr<ActionDataAbstract>& data,
+  virtual void quasiStatic(const std::shared_ptr<ActionDataAbstract>& data,
                            Eigen::Ref<VectorXs> u,
                            const Eigen::Ref<const VectorXs>& x,
                            const std::size_t maxiter = 100,
-                           const Scalar tol = Scalar(1e-9));
+                           const Scalar tol = Scalar(1e-9)) override;
+
+  /**
+   * @brief Cast the action numdiff model to a different scalar type.
+   *
+   * It is useful for operations requiring different precision or scalar types.
+   *
+   * @tparam NewScalar The new scalar type to cast to.
+   * @return ActionModelNumDiffTpl<NewScalar> An action model with the new
+   * scalar type.
+   */
+  template <typename NewScalar>
+  ActionModelNumDiffTpl<NewScalar> cast() const;
 
   /**
    * @brief Return the acton model that we use to numerical differentiate
    */
-  const boost::shared_ptr<Base>& get_model() const;
+  const std::shared_ptr<Base>& get_model() const;
 
   /**
    * @brief Return the disturbance constant used in the numerical
@@ -135,7 +147,7 @@ class ActionModelNumDiffTpl : public ActionModelAbstractTpl<_Scalar> {
    *
    * @param[out] os  Output stream object
    */
-  virtual void print(std::ostream& os) const;
+  virtual void print(std::ostream& os) const override;
 
  protected:
   using Base::has_control_limits_;  //!< Indicates whether any of the control
@@ -145,7 +157,6 @@ class ActionModelNumDiffTpl : public ActionModelAbstractTpl<_Scalar> {
   using Base::state_;               //!< Model of the state
   using Base::u_lb_;                //!< Lower control limits
   using Base::u_ub_;                //!< Upper control limits
-  using Base::unone_;               //!< Neutral state
 
  private:
   /**
@@ -161,8 +172,8 @@ class ActionModelNumDiffTpl : public ActionModelAbstractTpl<_Scalar> {
    */
   void assertStableStateFD(const Eigen::Ref<const VectorXs>& x);
 
-  boost::shared_ptr<Base> model_;  //!< Action model hat we want to apply the
-                                   //!< numerical differentiation
+  std::shared_ptr<Base> model_;  //!< Action model hat we want to apply the
+                                 //!< numerical differentiation
   Scalar e_jac_;   //!< Constant used for computing disturbances in Jacobian
                    //!< calculation
   Scalar e_hess_;  //!< Constant used for computing disturbances in Hessian
@@ -242,10 +253,10 @@ struct ActionDataNumDiffTpl : public ActionDataAbstractTpl<_Scalar> {
   VectorXs du;  //!< Control disturbance
   VectorXs xp;  //!< The integrated state from the disturbance on one DoF "\f$
                 //!< \int x dx_i \f$"
-  boost::shared_ptr<Base> data_0;  //!< The data that contains the final results
-  std::vector<boost::shared_ptr<Base> >
+  std::shared_ptr<Base> data_0;  //!< The data that contains the final results
+  std::vector<std::shared_ptr<Base> >
       data_x;  //!< The temporary data associated with the state variation
-  std::vector<boost::shared_ptr<Base> >
+  std::vector<std::shared_ptr<Base> >
       data_u;  //!< The temporary data associated with the control variation
 };
 
@@ -255,5 +266,8 @@ struct ActionDataNumDiffTpl : public ActionDataAbstractTpl<_Scalar> {
 /* --- Details -------------------------------------------------------------- */
 /* --- Details -------------------------------------------------------------- */
 #include "crocoddyl/core/numdiff/action.hxx"
+
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_CLASS(crocoddyl::ActionModelNumDiffTpl)
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_STRUCT(crocoddyl::ActionDataNumDiffTpl)
 
 #endif  // CROCODDYL_CORE_NUMDIFF_ACTION_HPP_

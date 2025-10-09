@@ -9,8 +9,6 @@
 #ifndef CROCODDYL_CORE_DATA_JOINT_HPP_
 #define CROCODDYL_CORE_DATA_JOINT_HPP_
 
-#include <boost/shared_ptr.hpp>
-
 #include "crocoddyl/core/data-collector-base.hpp"
 #include "crocoddyl/core/data/actuation.hpp"
 #include "crocoddyl/core/fwd.hpp"
@@ -37,8 +35,8 @@ struct JointDataAbstractTpl {
    * @param actuation  Actuation model
    * @param nu         Dimension of control input
    */
-  JointDataAbstractTpl(boost::shared_ptr<StateAbstract> state,
-                       boost::shared_ptr<ActuationModelAbstract> actuation,
+  JointDataAbstractTpl(std::shared_ptr<StateAbstract> state,
+                       std::shared_ptr<ActuationModelAbstract> actuation,
                        const std::size_t nu)
       : tau(actuation->get_nu()),
         a(state->get_nv()),
@@ -71,11 +69,11 @@ template <typename Scalar>
 struct DataCollectorJointTpl : virtual DataCollectorAbstractTpl<Scalar> {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  DataCollectorJointTpl(boost::shared_ptr<JointDataAbstractTpl<Scalar> > joint)
+  DataCollectorJointTpl(std::shared_ptr<JointDataAbstractTpl<Scalar> > joint)
       : DataCollectorAbstractTpl<Scalar>(), joint(joint) {}
   virtual ~DataCollectorJointTpl() {}
 
-  boost::shared_ptr<JointDataAbstractTpl<Scalar> > joint;
+  std::shared_ptr<JointDataAbstractTpl<Scalar> > joint;
 };
 
 template <typename Scalar>
@@ -89,14 +87,19 @@ struct DataCollectorJointActuationTpl : DataCollectorActuationTpl<Scalar> {
    * @param[in] joint      Joint data
    */
   DataCollectorJointActuationTpl(
-      boost::shared_ptr<ActuationDataAbstractTpl<Scalar> > actuation,
-      boost::shared_ptr<JointDataAbstractTpl<Scalar> > joint)
+      std::shared_ptr<ActuationDataAbstractTpl<Scalar> > actuation,
+      std::shared_ptr<JointDataAbstractTpl<Scalar> > joint)
       : DataCollectorActuationTpl<Scalar>(actuation), joint(joint) {}
   virtual ~DataCollectorJointActuationTpl() {}
 
-  boost::shared_ptr<JointDataAbstractTpl<Scalar> > joint;
+  std::shared_ptr<JointDataAbstractTpl<Scalar> > joint;
 };
 
 }  // namespace crocoddyl
+
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_STRUCT(crocoddyl::JointDataAbstractTpl)
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_STRUCT(crocoddyl::DataCollectorJointTpl)
+CROCODDYL_DECLARE_EXTERN_TEMPLATE_STRUCT(
+    crocoddyl::DataCollectorJointActuationTpl)
 
 #endif  // CROCODDYL_CORE_DATA_JOINT_HPP_

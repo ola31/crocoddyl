@@ -7,7 +7,10 @@
 <a href="https://gepettoweb.laas.fr/doc/loco-3d/crocoddyl/master/doxygen-html/"><img src="https://img.shields.io/badge/docs-online-brightgreen" alt="Documentation"/></a>
 <a href="https://gepgitlab.laas.fr/loco-3d/crocoddyl/pipelines?ref=devel"><img src="https://gepgitlab.laas.fr/loco-3d/crocoddyl/badges/devel/pipeline.svg">
 <a href="https://gepettoweb.laas.fr/doc/loco-3d/crocoddyl/devel/coverage/"><img src="https://gepgitlab.laas.fr/loco-3d/crocoddyl/badges/devel/coverage.svg">
+<a href="https://repology.org/project/crocoddyl/versions"><img src="https://repology.org/badge/version-for-repo/aur/crocoddyl.svg" alt="AUR package"></a>
 <a href="https://anaconda.org/conda-forge/crocoddyl"><img src="https://img.shields.io/conda/vn/conda-forge/crocoddyl.svg">
+<a href="https://repology.org/project/crocoddyl/versions"><img src="https://repology.org/badge/version-for-repo/nix_stable_24_05/crocoddyl.svg" alt="nixpkgs stable 24.05 package"></a>
+<a href="https://repology.org/project/crocoddyl/versions"><img src="https://repology.org/badge/version-for-repo/nix_unstable/crocoddyl.svg" alt="nixpkgs unstable package"></a>
 <a href="https://pypi.org/project/crocoddyl/"><img src="https://badge.fury.io/py/crocoddyl.svg">
 <a href="https://anaconda.org/conda-forge/crocoddyl"><img src="https://anaconda.org/conda-forge/crocoddyl/badges/downloads.svg">
 <a href="https://tldrlegal.com/license/bsd-3-clause-license-%28revised%29#fulltext"><img src="https://img.shields.io/badge/license-BSD--3--Clause-blue.svg?style=flat">
@@ -44,13 +47,20 @@ If you want to learn more about **Crocoddyl** and its solvers, we suggest readin
  * Cache friendly
  * Multi-threading support via **[OpenMP](https://www.openmp.org/)**
  * Python bindings (including abstractions) via **[Boost Python](https://wiki.python.org/moin/boost.python)**
- * C++14/17/20 compliant
+ * C++11/14/17/20 compliant
  * Extensively tested
- * Automatic code generation support via **[CppADCodeGen](https://github.com/joaoleal/CppADCodeGen)**
+ * Code generation in both C++ and Python via **[CppADCoGen](https://github.com/joaoleal/CppADCodeGen)**
 
 ## :penguin: Installation
 
 **Crocoddyl** can be easily installed on various Linux (Ubuntu, Fedora, etc.) and Unix distributions (Mac OS X, BSD, etc.). Below, there are different ways to install Crocoddyl.
+
+### <img src="https://aur.archlinux.org/static/images/favicon.ico" height="18" /> On ArchLinux
+
+With your favorite AUR helper, eg. paru:
+```bash
+    paru -Syu crocoddyl
+```
 
 ### :dragon: From <img src="https://s3.amazonaws.com/conda-dev/conda_logo.svg" height="18">
 
@@ -59,6 +69,16 @@ Just run the following command in the terminal:
    conda install crocoddyl -c conda-forge
 ```
 Conda installation supports [![conda install](https://anaconda.org/conda-forge/crocoddyl/badges/platforms.svg)](https://anaconda.org/conda-forge/crocoddyl).
+
+### <img src="https://avatars.githubusercontent.com/u/487568" height="18" /> From Nix
+
+`crocoddyl` & `python3Packages.crocoddyl` are available in [nixpkgs](https://github.com/NixOS/nixpkgs/).
+
+This repository is also a flake, so you may:
+- run a python shell with crocoddyl: `nix run github:loco-3d/crocoddyl`
+- use it in your own flake: `crocoddyl.url = "github:loco-3d/crocoddyl";`
+
+The build cache use by CI and developers is [gepetto.cachix.org](https://app.cachix.org/cache/gepetto)
 
 ### :snake: From <img src="https://res.cloudinary.com/practicaldev/image/fetch/s--4-K6Sjm4--/c_imagga_scale,f_auto,fl_progressive,h_420,q_auto,w_1000/https://cdn-images-1.medium.com/max/1600/1%2A_Wkc-WkNu6GJAAQ26jXZOg.png" height="22">
 
@@ -98,32 +118,37 @@ Just clone it (with `--recursive`) into a catkin workspace and compile it.
 
 1. Install Crocoddyl's mandatory dependencies:
    * [pinocchio](https://github.com/stack-of-tasks/pinocchio)
-   * [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page)
+   * [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page)
    * [eigenpy](https://github.com/stack-of-tasks/eigenpy)
    * [Boost](https://www.boost.org/)
 2. (optional) Install Crocoddyl's optional dependencies
-   * [OpenMP](https://www.openmp.org/) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for multi-threading support)
-   * [CppADCogen](https://github.com/joaoleal/CppADCodeGen) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for code-generation support)
-   * [Ipopt](https://github.com/coin-or/Ipopt) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for Ipopt support)
-   * [example-robot-data](https://github.com/gepetto/example-robot-data) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for robotic examples, install Python loaders)
-   * [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba) &nbsp;&nbsp;(for display)
-   * [meshcat-python](https://github.com/rdeits/meshcat-python) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for display)
-   * [jupyter](https://jupyter.org/) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for notebooks)
-   * [matplotlib](https://matplotlib.org/) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for plotting)
+   * [OpenMP](https://www.openmp.org/) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for multi-threading support)
+   * [CppADCoGen](https://github.com/joaoleal/CppADCodeGen) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for code-generation support)
+   * [pycppad](https://github.com/Simple-Robotics/pycppad) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for code-generation support)
+   * [Ipopt](https://github.com/coin-or/Ipopt) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for Ipopt support)
+   * [example-robot-data](https://github.com/gepetto/example-robot-data) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for robotic examples, install Python loaders)
+   * [gepetto-viewer-corba](https://github.com/Gepetto/gepetto-viewer-corba) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for display in Gepetto viewer, i.e., `GepettoDisplay`)
+   * [meshcat-python](https://github.com/rdeits/meshcat-python) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for display in Meshcat, i.e., `MeshcatDisplay`)
+   * [whole_body_state_rviz_plugin](https://github.com/loco-3d/whole_body_state_rviz_plugin) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for display in ROS, i.e., `RvizDisplay`)
+   * [crocoddyl_msgs](https://github.com/RobotMotorIntelligence/crocoddyl_msgs) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for display in ROS, i.e., `RvizDisplay`)
+   * [urdf_parser_py](https://github.com/ros/urdf_parser_py) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for display in ROS, i.e., `RvizDisplay`)
+   * [jupyter](https://jupyter.org/) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for notebooks)
+   * [matplotlib](https://matplotlib.org/) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(for plotting)
 3. Clone it (with --recursive), create a build directory inside, and:
    ```bash
    cmake .. && make && make install
    ```
+You can disable the tests, examples, and benchmarks using the following CMake options: `BUILD_TESTING`, `BUILD_EXAMPLES`, and `BUILD_BENCHMARK`. Note that the tests, examples or benchmarks require [example-robot-data](https://github.com/gepetto/example-robot-data).
 
 ## :mag: Documentation
 
-Crocoddyl's Doxygen documentation is available [here](https://gepettoweb.laas.fr/doc/loco-3d/crocoddyl/master/doxygen-html/). Alternatively, you can also check out the Jupyter notebooks. Start in the following order.
-- [examples/notebooks/unicycle_towards_origin.ipynb](https://github.com/loco-3d/crocoddyl/blob/master/examples/notebooks/unicycle_towards_origin.ipynb)
-- [examples/notebooks/cartpole_swing_up.ipynb](https://github.com/loco-3d/crocoddyl/blob/master/examples/notebooks/cartpole_swing_up.py)
-- [examples/notebooks/arm_manipulation.ipynb](https://github.com/loco-3d/crocoddyl/blob/master/examples/notebooks/arm_manipulation.ipynb)
-- [examples/notebooks/whole_body_manipulation.ipynb](https://github.com/loco-3d/crocoddyl/blob/master/examples/notebooks/whole_body_manipulation.ipynb)
-- [examples/notebooks/bipedal_walking.ipynb](https://github.com/loco-3d/crocoddyl/blob/master/examples/notebooks/bipedal_walking.ipynb)
-- [examples/notebooks/introduction_to_crocoddyl.ipynb](https://github.com/loco-3d/crocoddyl/blob/master/examples/notebooks/introduction_to_crocoddyl.ipynb)
+Crocoddyl's Doxygen documentation is available [here](https://gepettoweb.laas.fr/doc/loco-3d/crocoddyl/master/doxygen-html/). Alternatively, you can also check out the Jupyter notebooks. We suggest to explore at least these notebooks:
+- [notebooks/01_introduction_to_crocoddyl.ipynb](https://github.com/loco-3d/crocoddyl/blob/devel/notebooks/01_introduction_to_crocoddyl.ipynb)
+- [notebooks/02_optimizing_a_cartpole_swingup.ipynb](https://github.com/loco-3d/crocoddyl/blob/devel/notebooks/02_optimizing_a_cartpole_swingup.ipynb)
+- [notebooks/03_optimizing_an_unicycle.ipynb](https://github.com/loco-3d/crocoddyl/blob/devel/notebooks/03_optimizing_an_unicycle.ipynb)
+- [notebooks/04_actuating_an_acrobot.ipynb](https://github.com/loco-3d/crocoddyl/blob/devel/notebooks/04_actuating_an_acrobot.ipynb)
+- [notebooks/05_codegenerating_a_cartpole.ipynb](https://github.com/loco-3d/crocoddyl/blob/devel/notebooks/05_codegenerating_a_cartpole.ipynb)
+- [notebooks/06_scaling_to_robotics.ipynb](https://github.com/loco-3d/crocoddyl/blob/devel/notebooks/06_scaling_to_robotics.ipynb)
 
 Moreover, after installation, you could run the examples as follows:
 ```bash
@@ -154,12 +179,12 @@ To cite **Crocoddyl** in your academic research, please use the following BibTeX
   year={2020}
 }
 ```
-Please consider citing our selected publications and contributions described in [PUBLICATIONS.md](https://github.com/loco-3d/crocoddyl/blob/master/PUBLICATIONS.md).
+Please consider citing our selected publications and contributions described in [PUBLICATIONS.md](https://github.com/loco-3d/crocoddyl/blob/devel/PUBLICATIONS.md).
 
 **Crocoddyl's** contributions extend beyond efficient software development. Please also consider citing the algorithm contributions of our different solvers and formulations:
- - Feasibility-driven DDP (FDDP): [[1]](#1)
- - Control-limited feasibility-driven DDP (Box-FDDP): [[2]](#2)
- - Inverse-dynamics trajectory optimization and equality-constrained DDP solver (Intro solver): [[3]](#3)
+ - Feasibility-driven solvers (FDDP and Box-FDDP): [[1]](#1), [[2]](#2)
+ - Inverse-dynamics trajectory optimization and endpoint constrains: [[3]](#3) [[4]](#4)
+ - Multi-Contact Inertial Parameters Estimation and Localization in Legged Robots: [[5]](#5)
 
 
 Finally, please also consider citing **[Pinocchio](https://github.com/stack-of-tasks/pinocchio)**, which contributes to the efficient implementation of rigid body algorithms and their derivatives. For more details on how to cite Pinocchio visit: [https://github.com/stack-of-tasks/pinocchio](https://github.com/stack-of-tasks/pinocchio).
@@ -167,22 +192,19 @@ Finally, please also consider citing **[Pinocchio](https://github.com/stack-of-t
 
 ### :open_book:  Selected publications
 
-<a id="1">[1]</a> C. Mastalli, R. Budhiraja, W. Merkt, G. Saurel, B. Hammoud, M. Naveau, J. Carpentier, L. Righetti, S. Vijayakumar and N. Mansard. [Crocoddyl: An Efficient and Versatile Framework for Multi-Contact Optimal Control](https://cmastalli.github.io/publications/crocoddyl20icra.html), IEEE International Conference on Robotics and Automation (ICRA), 2020
+<a id="1">[1]</a> C. Mastalli, R. Budhiraja, W. Merkt, G. Saurel, B. Hammoud, M. Naveau, J. Carpentier, L. Righetti, S. Vijayakumar and N. Mansard. [Crocoddyl: An Efficient and Versatile Framework for Multi-Contact Optimal Control](https://cmastalli.github.io/publications/crocoddyl20icra.html), IEEE International Conference on Robotics and Automation (ICRA), 2020.
 
-<a id="2">[2]</a> C. Mastalli, W. Merkt, J. Marti-Saumell, H. Ferrolho, J. Sola, N. Mansard and S. Vijayakumar. [A Feasibility-Driven Approach
-to Control-Limited DDP](https://arxiv.org/pdf/2010.00411.pdf), Autonomous Robots, 2022
+<a id="2">[2]</a> C. Mastalli, W. Merkt, J. Marti-Saumell, H. Ferrolho, J. Sola, N. Mansard and S. Vijayakumar. [A Feasibility-Driven Approach to Control-Limited DDP](https://arxiv.org/pdf/2010.00411.pdf), Autonomous Robots, 2022.
 
-<a id="3">[3]</a> C. Mastalli, S. P. Chhatoi, T. Corbères, S. Tonneau and S. Vijayakumar. [Inverse-Dynamics MPC via Nullspace Resolution](https://arxiv.org/pdf/2209.05375.pdf), IEEE Transactions on Robotics, 2023
+<a id="3">[3]</a> C. Mastalli, S. P. Chhatoi, T. Corbères, S. Tonneau and S. Vijayakumar. [Inverse-Dynamics MPC via Nullspace Resolution](https://arxiv.org/pdf/2209.05375.pdf), IEEE Transactions on Robotics, 2023.
 
+<a id="4">[4]</a> M. Parilli, S. Martinez, and C.Mastall. [Endpoint-Explicit Differential Dynamic Programming via Exact Resolution](https://arxiv.org/pdf/2503.03897), IEEE International Conference on Robotics and Automation (ICRA), 2025.
+
+<a id="5">[5]</a> S. Martinez, R. Griffin, and C.Mastalli. [Multi-Contact Inertial Parameters Estimation and Localization in Legged Robots](https://arxiv.org/pdf/2403.17161), IEEE Robotics and Automation Letters (RAL), 2025.
 
 ## :computer:  Questions and Issues
 
-You have a question or an issue? Please open a [new issue](https://github.com/loco-3d/crocoddyl/issues).
-
-
-## :mag: Steering Committee
-
-**Crocoddyl** is managed by a steering committee which meets every two weeks to discuss ongoing developments. The committee is led by [Carlos Mastalli](https://cmastalli.github.io/), [Nicolas Mansard](http://projects.laas.fr/gepetto/index.php/Members/NicolasMansard), [Guilhem Saurel](http://projects.laas.fr/gepetto/index.php/Members/GuilhemSaurel) and [Justin Carpentier](https://jcarpent.github.io/) are other members of the committee.
+You have a question or an issue? Please open a [new issue](https://github.com/loco-3d/crocoddyl/issues) or a [discussion](https://github.com/loco-3d/crocoddyl/discussions).
 
 
 ## :copyright: Credits
